@@ -1,0 +1,19 @@
+{
+  "name": "link-inbio-agents",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "content-pipeline": "node --loader ts-node/esm agents/content-pipeline/index.ts",
+    "serve": "python -m http.server 3000"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.37.0",
+    "@supabase/supabase-js": "^2.49.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.0"
+  }
+}
