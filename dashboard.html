@@ -29,12 +29,29 @@
       padding: 0 0 60px;
     }
 
+    /* ── Lock screen ── */
+    #lock-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0a0a0f;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 20px;
+    }
+    #lock-screen h2 { font-size: 20px; font-weight: 600; }
+    #lock-screen p  { font-size: 13px; color: #8888aa; }
+    #pin-input {
+      width: 220px; padding: 12px 16px; font-size: 18px;
+      background: #13131a; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: #f0f0f5; text-align: center;
+      letter-spacing: 6px; outline: none;
+    }
+    #pin-input:focus { border-color: #7c4dff; }
+    #pin-error { color: #ff5555; font-size: 13px; display: none; }
+
     /* ── Header ── */
     header {
       background: linear-gradient(135deg, #1f005c 0%, #5b0060 40%, #ac255e 75%, #ff6f4e 100%);
       padding: 40px 24px 32px;
       text-align: center;
-      position: relative;
     }
     header img {
       width: 88px; height: 88px; border-radius: 50%;
@@ -65,9 +82,7 @@
       margin-bottom: 14px;
       display: flex; align-items: center; gap: 10px;
     }
-    .section-title::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
-    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
     /* ── Grid ── */
     .grid { display: grid; gap: 10px; }
@@ -76,59 +91,43 @@
 
     /* ── Card ── */
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
       display: flex; align-items: flex-start; gap: 12px;
       text-decoration: none; color: inherit;
       transition: background 0.2s, border-color 0.2s, transform 0.15s;
-      cursor: pointer;
     }
     .card:hover {
       background: var(--surface2);
-      border-color: rgba(124, 77, 255, 0.35);
+      border-color: rgba(124,77,255,0.35);
       transform: translateY(-1px);
     }
-    .card-icon {
-      font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 1px;
-    }
+    .card-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
     .card-body { flex: 1; min-width: 0; }
-    .card-title {
-      font-size: 14px; font-weight: 500;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .card-sub {
-      font-size: 12px; color: var(--muted); margin-top: 3px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .card-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
     .badge {
       font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
       text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; align-self: flex-start;
     }
-    .badge-purple { background: rgba(124,77,255,0.2); color: #b39dff; }
-    .badge-orange { background: rgba(255,109,0,0.2); color: #ffaa66; }
-    .badge-pink   { background: rgba(233,30,140,0.2); color: #ff80c0; }
-    .badge-green  { background: rgba(29,185,84,0.2);  color: #5cf08a; }
-    .badge-blue   { background: rgba(30,150,233,0.2); color: #80d0ff; }
+    .badge-purple { background: rgba(124,77,255,0.2);  color: #b39dff; }
+    .badge-orange { background: rgba(255,109,0,0.2);   color: #ffaa66; }
+    .badge-pink   { background: rgba(233,30,140,0.2);  color: #ff80c0; }
+    .badge-green  { background: rgba(29,185,84,0.2);   color: #5cf08a; }
+    .badge-blue   { background: rgba(30,150,233,0.2);  color: #80d0ff; }
     .badge-gray   { background: rgba(255,255,255,0.08); color: var(--muted); }
 
-    /* ── Supabase status pill ── */
+    /* ── Status bar ── */
     .status-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 18px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 18px;
       display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
     }
-    .status-pill {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--muted);
-    }
+    .status-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
     .dot { width: 8px; height: 8px; border-radius: 50%; }
     .dot-green  { background: #1db954; box-shadow: 0 0 6px #1db954; }
     .dot-yellow { background: #f5a623; box-shadow: 0 0 6px #f5a623; }
-    .dot-gray   { background: #555; }
 
     /* ── Search ── */
     .search-wrap { margin-bottom: 28px; }
@@ -151,6 +150,18 @@
 </head>
 <body>
 
+<!-- Lock Screen -->
+<div id="lock-screen">
+  <div style="font-size:32px">🔐</div>
+  <h2>Command Center</h2>
+  <p>Enter your PIN to continue</p>
+  <input type="password" id="pin-input" maxlength="6" placeholder="••••••" autocomplete="off" />
+  <div id="pin-error">Incorrect PIN. Try again.</div>
+</div>
+
+<!-- Main Content (hidden until unlocked) -->
+<div id="main-content" style="display:none">
+
 <header>
   <img src="https://live.staticflickr.com/65535/53460632619_d32a5fa3c9_b.jpg" alt="Stephon Morris" />
   <h1>Stephon Morris</h1>
@@ -166,425 +177,159 @@
 
 <div class="page">
 
-  <!-- Search -->
   <div class="search-wrap">
     <input type="text" id="search" placeholder="Search projects, docs, tools…" />
   </div>
 
-  <!-- Infrastructure Status -->
   <div class="section">
     <div class="section-title">Infrastructure</div>
     <div class="status-bar">
-      <div class="status-pill">
-        <div class="dot dot-green"></div>
-        <span>Supabase — morrisstephon51's Project (us-west-1)</span>
-      </div>
-      <div class="status-pill">
-        <div class="dot dot-yellow"></div>
-        <span>Supabase — Cam II (inactive)</span>
-      </div>
-      <div class="status-pill">
-        <div class="dot dot-green"></div>
-        <span>GitHub — 17 public repos</span>
-      </div>
+      <div class="status-pill"><div class="dot dot-green"></div><span>Supabase — morrisstephon51's Project (us-west-1)</span></div>
+      <div class="status-pill"><div class="dot dot-yellow"></div><span>Supabase — Cam II (inactive)</span></div>
+      <div class="status-pill"><div class="dot dot-green"></div><span>GitHub — 17 public repos</span></div>
       <a href="https://supabase.com/dashboard/project/fqdrvhpdntflfkqxlvkq" target="_blank" style="margin-left:auto;font-size:12px;color:var(--purple);text-decoration:none;">Open Supabase →</a>
     </div>
   </div>
 
-  <!-- AI Agents -->
-  <div class="section" id="sec-agents">
+  <div class="section">
     <div class="section-title">AI Agents Built</div>
     <div class="grid grid-3">
-      <a class="card" href="https://github.com/morrisstephon51/content-machine" target="_blank">
-        <div class="card-icon">🤖</div>
-        <div class="card-body">
-          <div class="card-title">Content Pipeline Agent</div>
-          <div class="card-sub">Topic → 4-platform posts → Supabase</div>
-        </div>
-        <span class="badge badge-purple">Active</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/agent_I_content" target="_blank">
-        <div class="card-icon">📱</div>
-        <div class="card-body">
-          <div class="card-title">Agent I — Content</div>
-          <div class="card-sub">Link-in-bio + content automation</div>
-        </div>
-        <span class="badge badge-purple">v1</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/agent-II" target="_blank">
-        <div class="card-icon">⚙️</div>
-        <div class="card-body">
-          <div class="card-title">Agent II</div>
-          <div class="card-sub">Second agent build</div>
-        </div>
-        <span class="badge badge-gray">Dev</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/Enrollment_Funnel_Agent" target="_blank">
-        <div class="card-icon">📊</div>
-        <div class="card-body">
-          <div class="card-title">Enrollment Funnel Agent</div>
-          <div class="card-sub">BigHeart enrollment ROI tracker</div>
-        </div>
-        <span class="badge badge-orange">BigHeart</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/-Community_intake_Routing" target="_blank">
-        <div class="card-icon">🔀</div>
-        <div class="card-body">
-          <div class="card-title">Community Intake & Routing</div>
-          <div class="card-sub">Qualifies + routes inbound interest</div>
-        </div>
-        <span class="badge badge-pink">The Plug AI</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/job_opportunity_scanner" target="_blank">
-        <div class="card-icon">🎯</div>
-        <div class="card-body">
-          <div class="card-title">Job Opportunity Scanner</div>
-          <div class="card-sub">Indeed + ZipRecruiter daily fits</div>
-        </div>
-        <span class="badge badge-blue">Career</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/ai-video-reel-generator" target="_blank">
-        <div class="card-icon">🎬</div>
-        <div class="card-body">
-          <div class="card-title">AI Video Reel Generator</div>
-          <div class="card-sub">Remotion-powered video automation</div>
-        </div>
-        <span class="badge badge-purple">Remotion</span>
-      </a>
+      <a class="card" href="https://github.com/morrisstephon51/content-machine" target="_blank"><div class="card-icon">🤖</div><div class="card-body"><div class="card-title">Content Pipeline Agent</div><div class="card-sub">Topic → 4-platform posts → Supabase</div></div><span class="badge badge-purple">Active</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/agent_I_content" target="_blank"><div class="card-icon">📱</div><div class="card-body"><div class="card-title">Agent I — Content</div><div class="card-sub">Link-in-bio + content automation</div></div><span class="badge badge-purple">v1</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/agent-II" target="_blank"><div class="card-icon">⚙️</div><div class="card-body"><div class="card-title">Agent II</div><div class="card-sub">Second agent build</div></div><span class="badge badge-gray">Dev</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/Enrollment_Funnel_Agent" target="_blank"><div class="card-icon">📊</div><div class="card-body"><div class="card-title">Enrollment Funnel Agent</div><div class="card-sub">BigHeart enrollment ROI tracker</div></div><span class="badge badge-orange">BigHeart</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/-Community_intake_Routing" target="_blank"><div class="card-icon">🔀</div><div class="card-body"><div class="card-title">Community Intake & Routing</div><div class="card-sub">Qualifies + routes inbound interest</div></div><span class="badge badge-pink">The Plug AI</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/job_opportunity_scanner" target="_blank"><div class="card-icon">🎯</div><div class="card-body"><div class="card-title">Job Opportunity Scanner</div><div class="card-sub">Indeed + ZipRecruiter daily fits</div></div><span class="badge badge-blue">Career</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/ai-video-reel-generator" target="_blank"><div class="card-icon">🎬</div><div class="card-body"><div class="card-title">AI Video Reel Generator</div><div class="card-sub">Remotion-powered video automation</div></div><span class="badge badge-purple">Remotion</span></a>
     </div>
   </div>
 
-  <!-- GitHub Repositories -->
-  <div class="section" id="sec-repos">
+  <div class="section">
     <div class="section-title">GitHub Repositories</div>
     <div class="grid grid-2">
-      <a class="card" href="https://github.com/morrisstephon51/Link-inbio" target="_blank">
-        <div class="card-icon">🔗</div>
-        <div class="card-body">
-          <div class="card-title">Link-inbio</div>
-          <div class="card-sub">This site — personal hub</div>
-        </div>
-        <span class="badge badge-green">Live</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/Link-in-bio" target="_blank">
-        <div class="card-icon">🔗</div>
-        <div class="card-body">
-          <div class="card-title">Link-in-bio</div>
-          <div class="card-sub">dpi-link-in-bio project</div>
-        </div>
-        <span class="badge badge-gray">Repo</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/Stefan_portfolio" target="_blank">
-        <div class="card-icon">💼</div>
-        <div class="card-body">
-          <div class="card-title">Stefan Portfolio</div>
-          <div class="card-sub">Portfolio v1</div>
-        </div>
-        <span class="badge badge-gray">Repo</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/Stefan-Portfolio" target="_blank">
-        <div class="card-icon">💼</div>
-        <div class="card-body">
-          <div class="card-title">Stefan-Portfolio</div>
-          <div class="card-sub">Portfolio v2</div>
-        </div>
-        <span class="badge badge-gray">Repo</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/-portfolio" target="_blank">
-        <div class="card-icon">💼</div>
-        <div class="card-body">
-          <div class="card-title">-portfolio</div>
-          <div class="card-sub">Portfolio v3</div>
-        </div>
-        <span class="badge badge-gray">Repo</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/psychic-bassoon" target="_blank">
-        <div class="card-icon">📦</div>
-        <div class="card-body">
-          <div class="card-title">psychic-bassoon</div>
-          <div class="card-sub">Personal sandbox</div>
-        </div>
-        <span class="badge badge-gray">Repo</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/psychic-octo-engine" target="_blank">
-        <div class="card-icon">📦</div>
-        <div class="card-body">
-          <div class="card-title">psychic-octo-engine</div>
-          <div class="card-sub">Experimental build</div>
-        </div>
-        <span class="badge badge-gray">Repo</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/studious-umbrella" target="_blank">
-        <div class="card-icon">📦</div>
-        <div class="card-body">
-          <div class="card-title">studious-umbrella</div>
-          <div class="card-sub">Experimental build</div>
-        </div>
-        <span class="badge badge-gray">Repo</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/scrimba-workouts" target="_blank">
-        <div class="card-icon">🏋️</div>
-        <div class="card-body">
-          <div class="card-title">scrimba-workouts</div>
-          <div class="card-sub">Scrimba learning exercises</div>
-        </div>
-        <span class="badge badge-blue">Learning</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/skills-introduction-to-git" target="_blank">
-        <div class="card-icon">📘</div>
-        <div class="card-body">
-          <div class="card-title">skills-introduction-to-git</div>
-          <div class="card-sub">GitHub Skills exercise</div>
-        </div>
-        <span class="badge badge-blue">Learning</span>
-      </a>
+      <a class="card" href="https://github.com/morrisstephon51/Link-inbio" target="_blank"><div class="card-icon">🔗</div><div class="card-body"><div class="card-title">Link-inbio</div><div class="card-sub">This site — personal hub</div></div><span class="badge badge-green">Live</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/Link-in-bio" target="_blank"><div class="card-icon">🔗</div><div class="card-body"><div class="card-title">Link-in-bio</div><div class="card-sub">dpi-link-in-bio project</div></div><span class="badge badge-gray">Repo</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/Stefan_portfolio" target="_blank"><div class="card-icon">💼</div><div class="card-body"><div class="card-title">Stefan Portfolio</div><div class="card-sub">Portfolio v1</div></div><span class="badge badge-gray">Repo</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/Stefan-Portfolio" target="_blank"><div class="card-icon">💼</div><div class="card-body"><div class="card-title">Stefan-Portfolio</div><div class="card-sub">Portfolio v2</div></div><span class="badge badge-gray">Repo</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/-portfolio" target="_blank"><div class="card-icon">💼</div><div class="card-body"><div class="card-title">-portfolio</div><div class="card-sub">Portfolio v3</div></div><span class="badge badge-gray">Repo</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/psychic-bassoon" target="_blank"><div class="card-icon">📦</div><div class="card-body"><div class="card-title">psychic-bassoon</div><div class="card-sub">Personal sandbox</div></div><span class="badge badge-gray">Repo</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/psychic-octo-engine" target="_blank"><div class="card-icon">📦</div><div class="card-body"><div class="card-title">psychic-octo-engine</div><div class="card-sub">Experimental build</div></div><span class="badge badge-gray">Repo</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/studious-umbrella" target="_blank"><div class="card-icon">📦</div><div class="card-body"><div class="card-title">studious-umbrella</div><div class="card-sub">Experimental build</div></div><span class="badge badge-gray">Repo</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/scrimba-workouts" target="_blank"><div class="card-icon">🏋️</div><div class="card-body"><div class="card-title">scrimba-workouts</div><div class="card-sub">Scrimba learning exercises</div></div><span class="badge badge-blue">Learning</span></a>
+      <a class="card" href="https://github.com/morrisstephon51/skills-introduction-to-git" target="_blank"><div class="card-icon">📘</div><div class="card-body"><div class="card-title">skills-introduction-to-git</div><div class="card-sub">GitHub Skills exercise</div></div><span class="badge badge-blue">Learning</span></a>
     </div>
   </div>
 
-  <!-- The Plug AI Docs -->
-  <div class="section" id="sec-plugai">
+  <div class="section">
     <div class="section-title">The Plug AI — Program Docs</div>
     <div class="grid grid-3">
-      <a class="card" href="https://docs.google.com/document/d/1WdMJhvQzmfgu3eBl255Oa8em28oKhB-mrK8qn1l7S9U/edit" target="_blank">
-        <div class="card-icon">📋</div>
-        <div class="card-body">
-          <div class="card-title">Weekly Content — All Modules</div>
-          <div class="card-sub">ThePlug_WeeklyContent_AllModules</div>
-        </div>
-        <span class="badge badge-pink">Drive</span>
-      </a>
-      <a class="card" href="https://docs.google.com/document/d/1JH62U5cXCFz_ocQik5qTh438dZx5UNf4dpzLtmGvPcI/edit" target="_blank">
-        <div class="card-icon">🎯</div>
-        <div class="card-body">
-          <div class="card-title">Program Outcomes</div>
-          <div class="card-sub">ThePlug_ProgramOutcomes</div>
-        </div>
-        <span class="badge badge-pink">Drive</span>
-      </a>
-      <a class="card" href="https://docs.google.com/document/d/1p0GDXhmnPmhXYhyJJ_YdT07DrUkdWL0yObfQ1wBMhu8/edit" target="_blank">
-        <div class="card-icon">📚</div>
-        <div class="card-body">
-          <div class="card-title">Digital Literacy Program</div>
-          <div class="card-sub">ThePlug_DigitalLiteracy_Program</div>
-        </div>
-        <span class="badge badge-pink">Drive</span>
-      </a>
-      <a class="card" href="https://docs.google.com/document/d/19Ie3ANKR8X6jwOB3SUFCHFkS2Vng0UtcDfNN8uCRGDk/edit" target="_blank">
-        <div class="card-icon">🧠</div>
-        <div class="card-body">
-          <div class="card-title">Stef's Claude.md</div>
-          <div class="card-sub">AI system context doc</div>
-        </div>
-        <span class="badge badge-pink">Drive</span>
-      </a>
-      <a class="card" href="https://drive.google.com/file/d/17S2pDEDs74PO1-zN0VdXTOWLvFC8rhG7/view" target="_blank">
-        <div class="card-icon">🖼️</div>
-        <div class="card-body">
-          <div class="card-title">The Plug AI Logo</div>
-          <div class="card-sub">ThePlug_Logo.png</div>
-        </div>
-        <span class="badge badge-pink">Asset</span>
-      </a>
+      <a class="card" href="https://docs.google.com/document/d/1WdMJhvQzmfgu3eBl255Oa8em28oKhB-mrK8qn1l7S9U/edit" target="_blank"><div class="card-icon">📋</div><div class="card-body"><div class="card-title">Weekly Content — All Modules</div><div class="card-sub">ThePlug_WeeklyContent_AllModules</div></div><span class="badge badge-pink">Drive</span></a>
+      <a class="card" href="https://docs.google.com/document/d/1JH62U5cXCFz_ocQik5qTh438dZx5UNf4dpzLtmGvPcI/edit" target="_blank"><div class="card-icon">🎯</div><div class="card-body"><div class="card-title">Program Outcomes</div><div class="card-sub">ThePlug_ProgramOutcomes</div></div><span class="badge badge-pink">Drive</span></a>
+      <a class="card" href="https://docs.google.com/document/d/1p0GDXhmnPmhXYhyJJ_YdT07DrUkdWL0yObfQ1wBMhu8/edit" target="_blank"><div class="card-icon">📚</div><div class="card-body"><div class="card-title">Digital Literacy Program</div><div class="card-sub">ThePlug_DigitalLiteracy_Program</div></div><span class="badge badge-pink">Drive</span></a>
+      <a class="card" href="https://docs.google.com/document/d/19Ie3ANKR8X6jwOB3SUFCHFkS2Vng0UtcDfNN8uCRGDk/edit" target="_blank"><div class="card-icon">🧠</div><div class="card-body"><div class="card-title">Stef's Claude.md</div><div class="card-sub">AI system context doc</div></div><span class="badge badge-pink">Drive</span></a>
+      <a class="card" href="https://drive.google.com/file/d/17S2pDEDs74PO1-zN0VdXTOWLvFC8rhG7/view" target="_blank"><div class="card-icon">🖼️</div><div class="card-body"><div class="card-title">The Plug AI Logo</div><div class="card-sub">ThePlug_Logo.png</div></div><span class="badge badge-pink">Asset</span></a>
     </div>
   </div>
 
-  <!-- BigHeart Health -->
-  <div class="section" id="sec-bigheart">
+  <div class="section">
     <div class="section-title">BigHeart Health</div>
     <div class="grid grid-3">
-      <a class="card" href="https://docs.google.com/spreadsheets/d/1ZzjLR5ZxOBbA6b9wvEA8NUhW9wJQ_sKxAnE5UulEN8k/edit" target="_blank">
-        <div class="card-icon">📊</div>
-        <div class="card-body">
-          <div class="card-title">Program Planning Template</div>
-          <div class="card-sub">BigHeart program planning 10/2022</div>
-        </div>
-        <span class="badge badge-orange">Sheets</span>
-      </a>
-      <a class="card" href="https://docs.google.com/spreadsheets/d/127eOak8vAxxGZIVNcSAE3fo5Flb6YhV8aFCV00Hsfvo/edit" target="_blank">
-        <div class="card-icon">⛪</div>
-        <div class="card-body">
-          <div class="card-title">Church Community Links & QR</div>
-          <div class="card-sub">Links and QR Codes to church communities</div>
-        </div>
-        <span class="badge badge-orange">Sheets</span>
-      </a>
-      <a class="card" href="https://docs.google.com/document/d/1YNlob3qZ4175vMuwLjPNXYoIba6YgMXXRTiBPgUMq6s/edit" target="_blank">
-        <div class="card-icon">✉️</div>
-        <div class="card-body">
-          <div class="card-title">BHH Email Signature</div>
-          <div class="card-sub">BigHeart Health branding</div>
-        </div>
-        <span class="badge badge-orange">Drive</span>
-      </a>
-      <a class="card" href="https://docs.google.com/document/d/17fNON44gd8ATSxkO2flqAujJt9iWL1w4L1FKFFAV1eM/edit" target="_blank">
-        <div class="card-icon">🎥</div>
-        <div class="card-body">
-          <div class="card-title">Church Video Campaign Bible</div>
-          <div class="card-sub">Church_Video_Campaign_Bible.md</div>
-        </div>
-        <span class="badge badge-orange">Drive</span>
-      </a>
-      <a class="card" href="https://docs.google.com/presentation/d/1UKMz5Cf69m2lgmkEcBEu1dF1_0ajcpukLRsVmsQhk-8/edit" target="_blank">
-        <div class="card-icon">📅</div>
-        <div class="card-body">
-          <div class="card-title">Provider Bookings</div>
-          <div class="card-sub">Scheduling presentation</div>
-        </div>
-        <span class="badge badge-orange">Slides</span>
-      </a>
+      <a class="card" href="https://docs.google.com/spreadsheets/d/1ZzjLR5ZxOBbA6b9wvEA8NUhW9wJQ_sKxAnE5UulEN8k/edit" target="_blank"><div class="card-icon">📊</div><div class="card-body"><div class="card-title">Program Planning Template</div><div class="card-sub">BigHeart program planning 10/2022</div></div><span class="badge badge-orange">Sheets</span></a>
+      <a class="card" href="https://docs.google.com/spreadsheets/d/127eOak8vAxxGZIVNcSAE3fo5Flb6YhV8aFCV00Hsfvo/edit" target="_blank"><div class="card-icon">⛪</div><div class="card-body"><div class="card-title">Church Community Links & QR</div><div class="card-sub">Links and QR Codes to church communities</div></div><span class="badge badge-orange">Sheets</span></a>
+      <a class="card" href="https://docs.google.com/document/d/1YNlob3qZ4175vMuwLjPNXYoIba6YgMXXRTiBPgUMq6s/edit" target="_blank"><div class="card-icon">✉️</div><div class="card-body"><div class="card-title">BHH Email Signature</div><div class="card-sub">BigHeart Health branding</div></div><span class="badge badge-orange">Drive</span></a>
+      <a class="card" href="https://docs.google.com/document/d/17fNON44gd8ATSxkO2flqAujJt9iWL1w4L1FKFFAV1eM/edit" target="_blank"><div class="card-icon">🎥</div><div class="card-body"><div class="card-title">Church Video Campaign Bible</div><div class="card-sub">Church_Video_Campaign_Bible.md</div></div><span class="badge badge-orange">Drive</span></a>
+      <a class="card" href="https://docs.google.com/presentation/d/1UKMz5Cf69m2lgmkEcBEu1dF1_0ajcpukLRsVmsQhk-8/edit" target="_blank"><div class="card-icon">📅</div><div class="card-body"><div class="card-title">Provider Bookings</div><div class="card-sub">Scheduling presentation</div></div><span class="badge badge-orange">Slides</span></a>
     </div>
   </div>
 
-  <!-- CES Program -->
-  <div class="section" id="sec-ces">
+  <div class="section">
     <div class="section-title">CES Program Docs</div>
     <div class="grid grid-3">
-      <a class="card" href="https://docs.google.com/document/d/1qCY1H9FiUnQrwE3xJ5qkJ6rJz6CrQrPxUFT4wODN5dI/edit" target="_blank">
-        <div class="card-icon">📖</div>
-        <div class="card-body">
-          <div class="card-title">Knowledge Base v2</div>
-          <div class="card-sub">CES_Knowledge_Base_Reference_Program_v2</div>
-        </div>
-        <span class="badge badge-blue">Drive</span>
-      </a>
-      <a class="card" href="https://docs.google.com/presentation/d/12tuNe2zYaT-ou4qrnbBB-3n37ispakIJ5CDjZM_2hzs/edit" target="_blank">
-        <div class="card-icon">📊</div>
-        <div class="card-body">
-          <div class="card-title">Knowledge Base Slides</div>
-          <div class="card-sub">CES_Knowledge_Base_Reference_Program</div>
-        </div>
-        <span class="badge badge-blue">Slides</span>
-      </a>
-      <a class="card" href="https://docs.google.com/document/d/1pniCJEZJ_RnZQi_XZuUM3CoGkx3mI0_d4ZxBFp5ed48/edit" target="_blank">
-        <div class="card-icon">📋</div>
-        <div class="card-body">
-          <div class="card-title">SOP — Triple Booking</div>
-          <div class="card-sub">CES_SOP_TripleBooking</div>
-        </div>
-        <span class="badge badge-blue">SOP</span>
-      </a>
+      <a class="card" href="https://docs.google.com/document/d/1qCY1H9FiUnQrwE3xJ5qkJ6rJz6CrQrPxUFT4wODN5dI/edit" target="_blank"><div class="card-icon">📖</div><div class="card-body"><div class="card-title">Knowledge Base v2</div><div class="card-sub">CES_Knowledge_Base_Reference_Program_v2</div></div><span class="badge badge-blue">Drive</span></a>
+      <a class="card" href="https://docs.google.com/presentation/d/12tuNe2zYaT-ou4qrnbBB-3n37ispakIJ5CDjZM_2hzs/edit" target="_blank"><div class="card-icon">📊</div><div class="card-body"><div class="card-title">Knowledge Base Slides</div><div class="card-sub">CES_Knowledge_Base_Reference_Program</div></div><span class="badge badge-blue">Slides</span></a>
+      <a class="card" href="https://docs.google.com/document/d/1pniCJEZJ_RnZQi_XZuUM3CoGkx3mI0_d4ZxBFp5ed48/edit" target="_blank"><div class="card-icon">📋</div><div class="card-body"><div class="card-title">SOP — Triple Booking</div><div class="card-sub">CES_SOP_TripleBooking</div></div><span class="badge badge-blue">SOP</span></a>
     </div>
   </div>
 
-  <!-- Professional -->
-  <div class="section" id="sec-professional">
+  <div class="section">
     <div class="section-title">Professional</div>
     <div class="grid grid-3">
-      <a class="card" href="https://drive.google.com/file/d/1P-si6rd5SML287cM2fDXN702nvSWY57I/view" target="_blank">
-        <div class="card-icon">📄</div>
-        <div class="card-body">
-          <div class="card-title">Resume — S. Morris</div>
-          <div class="card-sub">Current resume (PDF)</div>
-        </div>
-        <span class="badge badge-green">PDF</span>
-      </a>
-      <a class="card" href="https://docs.google.com/presentation/d/1zKAZcVt26MM4jAkMcQWox_-A0VEKDJETfX66S2sfjRQ/edit" target="_blank">
-        <div class="card-icon">🎨</div>
-        <div class="card-body">
-          <div class="card-title">UX Portfolio</div>
-          <div class="card-sub">Olympus AU — design project</div>
-        </div>
-        <span class="badge badge-green">Slides</span>
-      </a>
-      <a class="card" href="https://www.linkedin.com/in/stephonmorris51/" target="_blank">
-        <div class="card-icon">💼</div>
-        <div class="card-body">
-          <div class="card-title">LinkedIn Profile</div>
-          <div class="card-sub">stephonmorris51</div>
-        </div>
-        <span class="badge badge-blue">Social</span>
-      </a>
-      <a class="card" href="https://docs.google.com/document/d/1Frtgb9soIS899DPEDlYaNWFvu9Fj6_FwF0I7A4ynXp0/edit" target="_blank">
-        <div class="card-icon">🎓</div>
-        <div class="card-body">
-          <div class="card-title">Merit America — Alum Perks</div>
-          <div class="card-sub">Resources & alumni benefits</div>
-        </div>
-        <span class="badge badge-gray">Drive</span>
-      </a>
-      <a class="card" href="https://docs.google.com/document/d/1-36cpQUkiNOOhC1oAOTWRw4cFv0QCS-8Ntspu6EeJ4Q/edit" target="_blank">
-        <div class="card-icon">🏗️</div>
-        <div class="card-body">
-          <div class="card-title">PitchKitchen AEOS Builder</div>
-          <div class="card-sub">AI Employee Operating System v1.1</div>
-        </div>
-        <span class="badge badge-purple">AI Tool</span>
-      </a>
+      <a class="card" href="https://drive.google.com/file/d/1P-si6rd5SML287cM2fDXN702nvSWY57I/view" target="_blank"><div class="card-icon">📄</div><div class="card-body"><div class="card-title">Resume — S. Morris</div><div class="card-sub">Current resume (PDF)</div></div><span class="badge badge-green">PDF</span></a>
+      <a class="card" href="https://docs.google.com/presentation/d/1zKAZcVt26MM4jAkMcQWox_-A0VEKDJETfX66S2sfjRQ/edit" target="_blank"><div class="card-icon">🎨</div><div class="card-body"><div class="card-title">UX Portfolio</div><div class="card-sub">Olympus AU — design project</div></div><span class="badge badge-green">Slides</span></a>
+      <a class="card" href="https://www.linkedin.com/in/stephonmorris51/" target="_blank"><div class="card-icon">💼</div><div class="card-body"><div class="card-title">LinkedIn Profile</div><div class="card-sub">stephonmorris51</div></div><span class="badge badge-blue">Social</span></a>
+      <a class="card" href="https://docs.google.com/document/d/1Frtgb9soIS899DPEDlYaNWFvu9Fj6_FwF0I7A4ynXp0/edit" target="_blank"><div class="card-icon">🎓</div><div class="card-body"><div class="card-title">Merit America — Alum Perks</div><div class="card-sub">Resources & alumni benefits</div></div><span class="badge badge-gray">Drive</span></a>
+      <a class="card" href="https://docs.google.com/document/d/1-36cpQUkiNOOhC1oAOTWRw4cFv0QCS-8Ntspu6EeJ4Q/edit" target="_blank"><div class="card-icon">🏗️</div><div class="card-body"><div class="card-title">PitchKitchen AEOS Builder</div><div class="card-sub">AI Employee Operating System v1.1</div></div><span class="badge badge-purple">AI Tool</span></a>
     </div>
   </div>
 
-  <!-- Tools -->
-  <div class="section" id="sec-tools">
+  <div class="section">
     <div class="section-title">Daily Tools</div>
     <div class="grid grid-2">
-      <a class="card" href="https://claude.ai/code" target="_blank">
-        <div class="card-icon">🤖</div>
-        <div class="card-body">
-          <div class="card-title">Claude Code</div>
-          <div class="card-sub">AI coding assistant</div>
-        </div>
-        <span class="badge badge-purple">AI</span>
-      </a>
-      <a class="card" href="https://chatgpt.com/" target="_blank">
-        <div class="card-icon">💬</div>
-        <div class="card-body">
-          <div class="card-title">ChatGPT</div>
-          <div class="card-sub">OpenAI assistant</div>
-        </div>
-        <span class="badge badge-green">AI</span>
-      </a>
-      <a class="card" href="https://supabase.com/dashboard/project/fqdrvhpdntflfkqxlvkq" target="_blank">
-        <div class="card-icon">🗄️</div>
-        <div class="card-body">
-          <div class="card-title">Supabase Dashboard</div>
-          <div class="card-sub">morrisstephon51's Project</div>
-        </div>
-        <span class="badge badge-green">DB</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51" target="_blank">
-        <div class="card-icon">🐙</div>
-        <div class="card-body">
-          <div class="card-title">GitHub Profile</div>
-          <div class="card-sub">17 repos · morrisstephon51</div>
-        </div>
-        <span class="badge badge-gray">Dev</span>
-      </a>
-      <a class="card" href="https://drive.google.com/drive/my-drive" target="_blank">
-        <div class="card-icon">📁</div>
-        <div class="card-body">
-          <div class="card-title">Google Drive</div>
-          <div class="card-sub">All files & documents</div>
-        </div>
-        <span class="badge badge-blue">Storage</span>
-      </a>
-      <a class="card" href="https://console.anthropic.com/" target="_blank">
-        <div class="card-icon">⚡</div>
-        <div class="card-body">
-          <div class="card-title">Anthropic Console</div>
-          <div class="card-sub">API keys & usage</div>
-        </div>
-        <span class="badge badge-purple">API</span>
-      </a>
+      <a class="card" href="https://claude.ai/code" target="_blank"><div class="card-icon">🤖</div><div class="card-body"><div class="card-title">Claude Code</div><div class="card-sub">AI coding assistant</div></div><span class="badge badge-purple">AI</span></a>
+      <a class="card" href="https://chatgpt.com/" target="_blank"><div class="card-icon">💬</div><div class="card-body"><div class="card-title">ChatGPT</div><div class="card-sub">OpenAI assistant</div></div><span class="badge badge-green">AI</span></a>
+      <a class="card" href="https://supabase.com/dashboard/project/fqdrvhpdntflfkqxlvkq" target="_blank"><div class="card-icon">🗄️</div><div class="card-body"><div class="card-title">Supabase Dashboard</div><div class="card-sub">morrisstephon51's Project</div></div><span class="badge badge-green">DB</span></a>
+      <a class="card" href="https://github.com/morrisstephon51" target="_blank"><div class="card-icon">🐙</div><div class="card-body"><div class="card-title">GitHub Profile</div><div class="card-sub">17 repos · morrisstephon51</div></div><span class="badge badge-gray">Dev</span></a>
+      <a class="card" href="https://drive.google.com/drive/my-drive" target="_blank"><div class="card-icon">📁</div><div class="card-body"><div class="card-title">Google Drive</div><div class="card-sub">All files & documents</div></div><span class="badge badge-blue">Storage</span></a>
+      <a class="card" href="https://console.anthropic.com/" target="_blank"><div class="card-icon">⚡</div><div class="card-body"><div class="card-title">Anthropic Console</div><div class="card-sub">API keys & usage</div></div><span class="badge badge-purple">API</span></a>
     </div>
   </div>
 
 </div><!-- /page -->
 
 <footer>
-  <p>Stephon Morris · Built with Claude Code · Updated June 2026</p>
+  <p>Stephon Morris · Updated June 2026</p>
 </footer>
 
-<script>
-  const input = document.getElementById('search');
-  const cards = document.querySelectorAll('.card');
+</div><!-- /main-content -->
 
-  input.addEventListener('input', () => {
-    const q = input.value.toLowerCase().trim();
-    cards.forEach(card => {
-      const text = card.textContent.toLowerCase();
-      card.style.display = (!q || text.includes(q)) ? '' : 'none';
+<script>
+  // ── PIN lock ──────────────────────────────────────────────
+  // Hash of PIN stored here — PIN is never stored in plain text.
+  // To change your PIN: run this in browser console:
+  //   crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPIN'))
+  //     .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+  // Then replace CORRECT_HASH below with the output.
+  const CORRECT_HASH = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+
+  async function hashPin(pin) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+    return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+
+  const pinInput = document.getElementById('pin-input');
+  const pinError = document.getElementById('pin-error');
+  const lockScreen = document.getElementById('lock-screen');
+  const mainContent = document.getElementById('main-content');
+
+  // Auto-check when 6 digits entered
+  pinInput.addEventListener('input', async () => {
+    if (pinInput.value.length === 6) {
+      const hash = await hashPin(pinInput.value);
+      if (hash === CORRECT_HASH) {
+        lockScreen.style.display = 'none';
+        mainContent.style.display = 'block';
+        sessionStorage.setItem('unlocked', '1');
+      } else {
+        pinError.style.display = 'block';
+        pinInput.value = '';
+        setTimeout(() => { pinError.style.display = 'none'; }, 2000);
+      }
+    }
+  });
+
+  // Stay unlocked for the session
+  if (sessionStorage.getItem('unlocked') === '1') {
+    lockScreen.style.display = 'none';
+    mainContent.style.display = 'block';
+  }
+
+  // ── Search ────────────────────────────────────────────────
+  const searchInput = document.getElementById('search');
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.toLowerCase().trim();
+    document.querySelectorAll('.card').forEach(card => {
+      card.style.display = (!q || card.textContent.toLowerCase().includes(q)) ? '' : 'none';
     });
-    // Hide empty section titles
     document.querySelectorAll('.section').forEach(sec => {
       const visible = [...sec.querySelectorAll('.card')].some(c => c.style.display !== 'none');
       sec.style.display = (q && !visible) ? 'none' : '';
