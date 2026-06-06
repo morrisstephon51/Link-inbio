@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stephon Morris — Resume</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --purple: #5b0060;
+      --orange: #ff6f4e;
+      --text: #1a1a2e;
+      --muted: #666;
+      --border: #e5e5e5;
+      --accent: #7c4dff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8f8fc;
+      color: var(--text);
+      padding: 40px 20px 80px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1f005c 0%, #5b0060 40%, #ac255e 75%, #ff6f4e 100%);
+      color: #fff;
+      padding: 40px 48px 36px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .header img {
+      width: 80px; height: 80px; border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255,255,255,0.4);
+      flex-shrink: 0;
+    }
+    .header-text h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-text .title { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+    .header-links {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px;
+    }
+    .header-links a {
+      color: rgba(255,255,255,0.9); font-size: 12px; text-decoration: none;
+      background: rgba(255,255,255,0.15); border-radius: 20px; padding: 3px 12px;
+      transition: background 0.2s;
+    }
+    .header-links a:hover { background: rgba(255,255,255,0.28); }
+
+    /* ── Body ── */
+    .body { padding: 40px 48px; }
+
+    /* ── Section ── */
+    .section { margin-bottom: 36px; }
+    .section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 16px; padding-bottom: 8px;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    /* ── Summary ── */
+    .summary { font-size: 14px; color: #333; line-height: 1.7; }
+
+    /* ── Experience ── */
+    .job { margin-bottom: 24px; }
+    .job-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 4px; }
+    .job-title { font-size: 15px; font-weight: 600; }
+    .job-company { font-size: 13px; color: var(--accent); font-weight: 500; }
+    .job-date { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .job-location { font-size: 12px; color: var(--muted); }
+    .job ul { margin-top: 10px; padding-left: 18px; }
+    .job li { margin-bottom: 5px; font-size: 13px; color: #333; }
+
+    /* ── Skills ── */
+    .skills-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-tag {
+      background: #f0ecff; color: var(--accent);
+      font-size: 12px; font-weight: 500;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .skill-tag.orange { background: #fff1ec; color: #cc4400; }
+    .skill-tag.green  { background: #edfff4; color: #1a7a40; }
+
+    /* ── Education ── */
+    .edu { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; margin-bottom: 14px; }
+    .edu-name { font-size: 14px; font-weight: 600; }
+    .edu-degree { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .edu-date { font-size: 12px; color: var(--muted); }
+
+    /* ── Projects ── */
+    .project { margin-bottom: 18px; }
+    .project-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .project-name { font-size: 14px; font-weight: 600; }
+    .project-link { font-size: 12px; color: var(--accent); text-decoration: none; }
+    .project-link:hover { text-decoration: underline; }
+    .project p { font-size: 13px; color: #444; }
+
+    /* ── Print button ── */
+    .print-bar {
+      text-align: center; padding: 20px;
+      background: #f8f8fc;
+      border-top: 1px solid var(--border);
+    }
+    .print-btn {
+      background: linear-gradient(135deg, #5b0060, #ac255e);
+      color: #fff; border: none; padding: 10px 28px;
+      border-radius: 8px; font-size: 14px; font-weight: 500;
+      cursor: pointer; text-decoration: none; display: inline-block;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; }
+      .print-bar { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .header { padding: 28px 24px; flex-direction: column; }
+      .body { padding: 28px 24px; }
+      .job-header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <img src="https://live.staticflickr.com/65535/53460632619_d32a5fa3c9_b.jpg" alt="Stephon Morris" />
+    <div class="header-text">
+      <h1>Stephon Morris</h1>
+      <div class="title">AI Educator · EdTech Program Manager · Healthcare IT · Community Builder</div>
+      <div class="header-links">
+        <a href="mailto:morrisstephon51@gmail.com">morrisstephon51@gmail.com</a>
+        <a href="https://www.linkedin.com/in/stephonmorris51/" target="_blank">LinkedIn</a>
+        <a href="https://github.com/morrisstephon51" target="_blank">GitHub</a>
+        <a href="https://stefan-portfolio-eight.vercel.app" target="_blank">Portfolio</a>
+        <a href="index.html">Link-in-Bio</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- Summary -->
+    <div class="section">
+      <div class="section-title">Profile</div>
+      <p class="summary">
+        Mission-driven technologist and AI educator focused on closing the digital equity gap in underserved communities across Chicago's south suburbs. Founder of <strong>The Plug AI</strong> — a community-first initiative that equips everyday people, community leaders, and organizations with practical AI skills. Experienced across EdTech program management, Healthcare IT, UX research, and AI agent development. U.S. Army veteran. Merit America alum. Builder of systems that scale human potential.
+      </p>
+    </div>
+
+    <!-- Experience -->
+    <div class="section">
+      <div class="section-title">Experience</div>
+
+      <div class="job">
+        <div class="job-header">
+          <div>
+            <div class="job-title">Founder & AI Education Director</div>
+            <div class="job-company">The Plug AI</div>
+          </div>
+          <div style="text-align:right">
+            <div class="job-date">2025 – Present</div>
+            <div class="job-location">Chicago South Suburbs, IL</div>
+          </div>
+        </div>
+        <ul>
+          <li>Built and launched a community-first AI literacy program serving underserved residents across Chicago's south suburban communities</li>
+          <li>Developed full digital literacy curriculum covering AI tools, prompt engineering, and practical automation for non-technical learners</li>
+          <li>Engineered a multi-agent content pipeline (Claude API + Supabase) that generates platform-ready social media content for Instagram, TikTok, Facebook, and YouTube Shorts</li>
+          <li>Designed onboarding flows, intake routing agents, and enrollment funnel automation to scale community reach without additional headcount</li>
+          <li>Secured partnership conversations with BigHeart Health to deliver AI-assisted healthcare navigation education</li>
+        </ul>
+      </div>
+
+      <div class="job">
+        <div class="job-header">
+          <div>
+            <div class="job-title">AI Content & Automation Specialist</div>
+            <div class="job-company">BigHeart Health</div>
+          </div>
+          <div style="text-align:right">
+            <div class="job-date">2025 – Present</div>
+            <div class="job-location">Chicago, IL</div>
+          </div>
+        </div>
+        <ul>
+          <li>Built and deployed an AI-powered content machine that converts single topics into multi-platform video and text campaigns</li>
+          <li>Developed enrollment funnel tracking agent to measure content-to-enrollment ROI across short-form video platforms</li>
+          <li>Created church community outreach materials and QR code campaigns targeting health-underserved populations</li>
+          <li>Designed provider booking system and managed content calendar for healthcare partner engagement</li>
+        </ul>
+      </div>
+
+      <div class="job">
+        <div class="job-header">
+          <div>
+            <div class="job-title">CES Program Coordinator</div>
+            <div class="job-company">Career & Employment Services</div>
+          </div>
+          <div style="text-align:right">
+            <div class="job-date">2024 – 2025</div>
+            <div class="job-location">Chicago, IL</div>
+          </div>
+        </div>
+        <ul>
+          <li>Authored Standard Operating Procedures for complex scheduling scenarios including triple-booking resolution</li>
+          <li>Built internal knowledge base reference programs used across the department</li>
+          <li>Coordinated program logistics and participant communications for workforce development initiatives</li>
+        </ul>
+      </div>
+
+      <div class="job">
+        <div class="job-header">
+          <div>
+            <div class="job-title">UX Designer / Researcher</div>
+            <div class="job-company">Olympus AU — Design Project</div>
+          </div>
+          <div style="text-align:right">
+            <div class="job-date">2023 – 2024</div>
+            <div class="job-location">Remote</div>
+          </div>
+        </div>
+        <ul>
+          <li>Conducted user research, competitive analysis, and usability testing for a consumer-facing digital product</li>
+          <li>Delivered full UX case study including user journey maps, wireframes, and prototype presentations</li>
+        </ul>
+      </div>
+
+      <div class="job">
+        <div class="job-header">
+          <div>
+            <div class="job-title">U.S. Army — Service Member</div>
+            <div class="job-company">United States Army</div>
+          </div>
+          <div style="text-align:right">
+            <div class="job-date">Prior Service</div>
+            <div class="job-location">United States</div>
+          </div>
+        </div>
+        <ul>
+          <li>Served honorably; developed discipline, mission focus, team leadership, and operational execution under pressure</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div class="section">
+      <div class="section-title">Key Projects & Builds</div>
+
+      <div class="project">
+        <div class="project-header">
+          <div class="project-name">Content Pipeline Agent</div>
+          <a class="project-link" href="https://content-machine-wine.vercel.app" target="_blank">content-machine-wine.vercel.app ↗</a>
+        </div>
+        <p>AI agent that transforms a single topic into platform-ready posts for Instagram, TikTok, Facebook, and YouTube Shorts — with hooks, captions, hashtags, and Remotion video payloads. Inserts directly into Supabase content queue. Built with Claude API + TypeScript.</p>
+      </div>
+
+      <div class="project">
+        <div class="project-header">
+          <div class="project-name">AI Video Reel Generator</div>
+          <a class="project-link" href="https://ai-video-reel-generator.vercel.app" target="_blank">ai-video-reel-generator.vercel.app ↗</a>
+        </div>
+        <p>Automated short-form video generation pipeline using Remotion. Converts content briefs into rendered video outputs for social media distribution.</p>
+      </div>
+
+      <div class="project">
+        <div class="project-header">
+          <div class="project-name">Community Intake & Routing Agent</div>
+          <a class="project-link" href="https://community-intake-routing.vercel.app" target="_blank">community-intake-routing.vercel.app ↗</a>
+        </div>
+        <p>Qualifies inbound interest for The Plug AI — classifies learners, partners, and volunteers then routes each to the appropriate onboarding flow and logs to Supabase.</p>
+      </div>
+
+      <div class="project">
+        <div class="project-header">
+          <div class="project-name">Stefan Portfolio</div>
+          <a class="project-link" href="https://stefan-portfolio-eight.vercel.app" target="_blank">stefan-portfolio-eight.vercel.app ↗</a>
+        </div>
+        <p>Personal portfolio site showcasing UX design work, AI projects, and professional background.</p>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="section">
+      <div class="section-title">Skills & Tools</div>
+      <div class="skills-grid">
+        <span class="skill-tag">AI Agent Development</span>
+        <span class="skill-tag">Claude API (Anthropic)</span>
+        <span class="skill-tag">Prompt Engineering</span>
+        <span class="skill-tag">TypeScript</span>
+        <span class="skill-tag">Supabase</span>
+        <span class="skill-tag">Remotion</span>
+        <span class="skill-tag">GitHub</span>
+        <span class="skill-tag">Vercel</span>
+        <span class="skill-tag orange">Curriculum Design</span>
+        <span class="skill-tag orange">AI Literacy Education</span>
+        <span class="skill-tag orange">Program Management</span>
+        <span class="skill-tag orange">Community Engagement</span>
+        <span class="skill-tag orange">Workforce Development</span>
+        <span class="skill-tag green">UX Research & Design</span>
+        <span class="skill-tag green">User Journey Mapping</span>
+        <span class="skill-tag green">Figma</span>
+        <span class="skill-tag green">HTML / CSS</span>
+        <span class="skill-tag green">Google Workspace</span>
+      </div>
+    </div>
+
+    <!-- Education -->
+    <div class="section">
+      <div class="section-title">Education & Training</div>
+
+      <div class="edu">
+        <div>
+          <div class="edu-name">Merit America — Tech Career Accelerator</div>
+          <div class="edu-degree">Healthcare IT Track · Google Career Certificate</div>
+        </div>
+        <div class="edu-date">2024 – 2025</div>
+      </div>
+
+      <div class="edu">
+        <div>
+          <div class="edu-name">Scrimba — Frontend Developer Path</div>
+          <div class="edu-degree">JavaScript · React · HTML/CSS</div>
+        </div>
+        <div class="edu-date">2023 – 2024</div>
+      </div>
+
+      <div class="edu">
+        <div>
+          <div class="edu-name">U.S. Army — Military Training</div>
+          <div class="edu-degree">Leadership · Operations · Mission Execution</div>
+        </div>
+        <div class="edu-date">Prior Service</div>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+
+  <div class="print-bar">
+    <a class="print-btn" onclick="window.print(); return false;" href="#">Print / Save as PDF</a>
+    &nbsp;&nbsp;
+    <a class="print-btn" href="index.html" style="background: rgba(0,0,0,0.15); color:#333;">← Back</a>
+  </div>
+
+</div><!-- /page -->
+
+</body>
+</html>
