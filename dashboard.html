@@ -542,9 +542,14 @@
 
 <script>
   // PIN lock — SHA-256 hash of the PIN
-  // Default PIN: 123456 — change by hashing your new PIN in the browser console:
+  // To set a new PIN, run in browser console:
   // crypto.subtle.digest('SHA-256',new TextEncoder().encode('yourPIN')).then(b=>console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
-  const CORRECT_HASH = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+  // Then replace CORRECT_HASH below with the output.
+  const CORRECT_HASH  = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+  const _DEFAULT_HASH = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+  if (CORRECT_HASH === _DEFAULT_HASH) {
+    console.warn('⚠️ SECURITY: Dashboard is using the default PIN. Update CORRECT_HASH in dashboard.html before sharing this URL.');
+  }
 
   async function hashPin(pin) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
