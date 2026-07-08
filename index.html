@@ -25,6 +25,23 @@
       padding: 48px 20px 64px;
     }
 
+    /* ── Skip link (WCAG 2.4.1) ── */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 0;
+      background: #fff;
+      color: #1f005c;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 16px;
+      text-decoration: none;
+      z-index: 9999;
+    }
+    .skip-link:focus {
+      top: 0;
+    }
+
     .container {
       max-width: 520px;
       margin: 0 auto;
@@ -159,7 +176,9 @@
 </head>
 <body>
 
-<div class="container">
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<main id="main-content" class="container">
 
   <!-- Profile -->
   <div class="profile">
@@ -256,7 +275,7 @@
     <p>© 2026 Stephon Morris · Chicago, IL</p>
   </footer>
 
-</div>
+</main>
 
 </body>
 </html>
