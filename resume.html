@@ -124,10 +124,22 @@
       cursor: pointer; text-decoration: none; display: inline-block;
     }
 
+    /* ── Scroll-reveal (gated on body.js-anim so content never hides without JS) ── */
+    @media (prefers-reduced-motion: no-preference) {
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: none; }
+      }
+      body.js-anim .header { animation: rise .6s cubic-bezier(.22, 1, .36, 1) both; }
+      body.js-anim .section { opacity: 0; }
+      body.js-anim .section.in-view { animation: rise .6s cubic-bezier(.22, 1, .36, 1) both; }
+    }
+
     @media print {
       body { background: #fff; padding: 0; }
       .page { box-shadow: none; border-radius: 0; }
       .print-bar { display: none; }
+      .header, .section { opacity: 1 !important; animation: none !important; }
     }
 
     @media (max-width: 600px) {
@@ -374,6 +386,19 @@
   </div>
 
 </div><!-- /page -->
+
+<script>
+  (function () {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.body.classList.add('js-anim');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.section').forEach(el => io.observe(el));
+  })();
+</script>
 
 </body>
 </html>

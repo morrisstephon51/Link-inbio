@@ -45,6 +45,41 @@
     .container {
       max-width: 520px;
       margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── 3D background layer (sits behind the content, never intercepts clicks) ── */
+    #bg3d {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Entrance animations ── */
+    @media (prefers-reduced-motion: no-preference) {
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: none; }
+      }
+
+      .profile    { animation: rise .6s cubic-bezier(.22, 1, .36, 1) both; }
+      .social-row { animation: rise .6s cubic-bezier(.22, 1, .36, 1) .15s both; }
+
+      /* Link column children stagger in; below-fold ones wait for .in-view.
+         Gated on .js-anim (added by script) so links stay visible without JS. */
+      .links.js-anim > * {
+        opacity: 0;
+      }
+      .links.js-anim > .in-view {
+        animation: rise .55s cubic-bezier(.22, 1, .36, 1) both;
+        animation-delay: calc(.25s + var(--i, 0) * 60ms);
+      }
+
+      .link-btn:active { transform: scale(.98); }
     }
 
     /* ── Profile ── */
@@ -176,6 +211,8 @@
 </head>
 <body>
 
+<canvas id="bg3d" aria-hidden="true"></canvas>
+
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
 <main id="main-content" class="container">
@@ -282,6 +319,169 @@
   </footer>
 
 </main>
+
+<script>
+  /* Staggered entrance for the link column (skipped entirely under reduced motion) */
+  (function () {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const links = document.querySelector('.links');
+    if (!links) return;
+    links.classList.add('js-anim');
+    const children = Array.from(links.children);
+    children.forEach((el, i) => el.style.setProperty('--i', i));
+    const t0 = performance.now();
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        if (performance.now() - t0 > 1000) e.target.style.setProperty('--i', 0);
+        e.target.classList.add('in-view');
+        io.unobserve(e.target);
+      });
+    }, { threshold: 0.05 });
+    children.forEach(el => io.observe(el));
+  })();
+</script>
+
+<!-- three.js ambient background -->
+<script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+<script type="module">
+  const canvas = document.getElementById('bg3d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+  boot();
+
+  async function boot() {
+    if (!canvas || reduce.matches) return;
+
+    let webgl2 = false;
+    try { webgl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) {}
+    if (!webgl2) return;
+
+    let THREE;
+    try { THREE = await import('three'); } catch (e) { return; }
+
+    const small = matchMedia('(max-width: 600px)').matches;
+    const mobile = matchMedia('(max-width: 768px)').matches;
+    const renderer = new THREE.WebGLRenderer({
+      canvas, alpha: true,
+      antialias: window.devicePixelRatio < 2,
+      powerPreference: 'low-power'
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.5 : 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, 1, .1, 100);
+    camera.position.z = 10;
+
+    /* Ember particles drifting up through the gradient */
+    const N = mobile ? 150 : 300;
+    const SPAN_X = 11, SPAN_Y = 9;
+    const pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+    const baseX = new Float32Array(N), speed = new Float32Array(N), phase = new Float32Array(N);
+    const palette = [
+      [1, .71, .42],   /* #ffb56b peach   40% */
+      [1, .44, .31],   /* #ff6f4e coral   30% */
+      [.67, .15, .37], /* #ac255e magenta 25% */
+      [1, 1, 1]        /* white            5% */
+    ];
+    for (let i = 0; i < N; i++) {
+      baseX[i] = (Math.random() * 2 - 1) * SPAN_X;
+      pos[i * 3]     = baseX[i];
+      pos[i * 3 + 1] = (Math.random() * 2 - 1) * SPAN_Y;
+      pos[i * 3 + 2] = -4 + Math.random() * 6;
+      speed[i] = .004 + Math.random() * .008;
+      phase[i] = Math.random() * Math.PI * 2;
+      const r = Math.random();
+      const c = palette[r < .4 ? 0 : r < .7 ? 1 : r < .95 ? 2 : 3];
+      col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
+    }
+    const pgeo = new THREE.BufferGeometry();
+    pgeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    pgeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const embers = new THREE.Points(pgeo, new THREE.PointsMaterial({
+      size: .07, vertexColors: true, transparent: true, opacity: .8,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    scene.add(embers);
+
+    /* Two big wireframes anchored off the content column */
+    const torus = new THREE.Mesh(
+      new THREE.TorusGeometry(3, .9, 8, 40),
+      new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff6f4e, transparent: true, opacity: .10 })
+    );
+    const ico = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(2.4, 1),
+      new THREE.MeshBasicMaterial({ wireframe: true, color: 0xffb56b, transparent: true, opacity: .08 })
+    );
+    const k = small ? .7 : 1;
+    torus.position.set(4.5 * k, 3 * k, -4);
+    ico.position.set(-4.5 * k, -4 * k, -5);
+    scene.add(torus, ico);
+
+    function resize() {
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    }
+    resize();
+    let rT;
+    window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(resize, 150); }, { passive: true });
+
+    const hoverable = matchMedia('(hover: hover)').matches;
+    let mx = 0, my = 0;
+    if (hoverable) {
+      window.addEventListener('pointermove', e => {
+        mx = (e.clientX / innerWidth) * 2 - 1;
+        my = (e.clientY / innerHeight) * 2 - 1;
+      }, { passive: true });
+    }
+
+    /* Background sinks slightly as the page scrolls */
+    let scrollY = 0;
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      scrollY = max > 0 ? (h.scrollTop / max) * 1.5 : 0;
+    }, { passive: true });
+
+    const clock = new THREE.Clock();
+    const posAttr = pgeo.getAttribute('position');
+    function tick() {
+      const t = clock.getElapsedTime();
+      for (let i = 0; i < N; i++) {
+        let y = posAttr.array[i * 3 + 1] + speed[i];
+        if (y > SPAN_Y) y = -SPAN_Y;
+        posAttr.array[i * 3 + 1] = y;
+        posAttr.array[i * 3] = baseX[i] + Math.sin(t * .4 + phase[i]) * .35;
+      }
+      posAttr.needsUpdate = true;
+      torus.rotation.x += .0008; torus.rotation.y += .0006;
+      ico.rotation.y -= .0008;   ico.rotation.z += .0005;
+      camera.position.x += (mx * .4 - camera.position.x) * .05;
+      camera.position.y += ((-my * .3 - scrollY) - camera.position.y) * .05;
+      renderer.render(scene, camera);
+    }
+
+    let running = false;
+    function setLoop() {
+      const want = !document.hidden && !reduce.matches;
+      if (want && !running) { renderer.setAnimationLoop(tick); running = true; }
+      if (!want && running) { renderer.setAnimationLoop(null); running = false; }
+    }
+    setLoop();
+    document.addEventListener('visibilitychange', setLoop);
+    if (reduce.addEventListener) reduce.addEventListener('change', setLoop);
+
+    canvas.addEventListener('webglcontextlost', e => {
+      e.preventDefault();
+      renderer.setAnimationLoop(null);
+      running = false;
+    });
+    canvas.addEventListener('webglcontextrestored', () => setLoop());
+  }
+</script>
 
 </body>
 </html>
