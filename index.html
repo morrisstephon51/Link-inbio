@@ -143,20 +143,21 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(28, 14, 38, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.22);
       border-radius: 14px;
       padding: 14px 18px;
       text-decoration: none;
       color: #fff;
       font-size: 15px;
       font-weight: 500;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       transition: background 0.2s, transform 0.15s;
     }
 
     .link-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(48, 24, 62, 0.55);
       transform: translateY(-2px);
     }
 
@@ -344,7 +345,12 @@
 
 <!-- three.js ambient background -->
 <script type="importmap">
-  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
 </script>
 <script type="module">
   const canvas = document.getElementById('bg3d');
@@ -359,32 +365,41 @@
     try { webgl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) {}
     if (!webgl2) return;
 
-    let THREE;
-    try { THREE = await import('three'); } catch (e) { return; }
+    let THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass;
+    try {
+      THREE = await import('three');
+      [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
+        import('three/addons/postprocessing/EffectComposer.js'),
+        import('three/addons/postprocessing/RenderPass.js'),
+        import('three/addons/postprocessing/UnrealBloomPass.js'),
+        import('three/addons/postprocessing/OutputPass.js')
+      ]);
+    } catch (e) { return; }
 
     const small = matchMedia('(max-width: 600px)').matches;
     const mobile = matchMedia('(max-width: 768px)').matches;
+    const hoverable = matchMedia('(hover: hover)').matches;
     const renderer = new THREE.WebGLRenderer({
       canvas, alpha: true,
       antialias: window.devicePixelRatio < 2,
-      powerPreference: 'low-power'
+      powerPreference: 'high-performance'
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.5 : 2));
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, 1, .1, 100);
-    camera.position.z = 10;
+    camera.position.z = 11;
 
-    /* Ember particles drifting up through the gradient */
-    const N = mobile ? 150 : 300;
+    /* Ember particles drifting up through the gradient — brighter, denser */
+    const N = mobile ? 220 : 460;
     const SPAN_X = 11, SPAN_Y = 9;
     const pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
     const baseX = new Float32Array(N), speed = new Float32Array(N), phase = new Float32Array(N);
     const palette = [
-      [1, .71, .42],   /* #ffb56b peach   40% */
-      [1, .44, .31],   /* #ff6f4e coral   30% */
-      [.67, .15, .37], /* #ac255e magenta 25% */
-      [1, 1, 1]        /* white            5% */
+      [1, .71, .42],   /* #ffb56b peach   */
+      [1, .44, .31],   /* #ff6f4e coral   */
+      [.67, .15, .37], /* #ac255e magenta */
+      [1, 1, 1]        /* white           */
     ];
     for (let i = 0; i < N; i++) {
       baseX[i] = (Math.random() * 2 - 1) * SPAN_X;
@@ -401,35 +416,53 @@
     pgeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     pgeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     const embers = new THREE.Points(pgeo, new THREE.PointsMaterial({
-      size: .07, vertexColors: true, transparent: true, opacity: .8,
+      size: .09, vertexColors: true, transparent: true, opacity: .9,
       blending: THREE.AdditiveBlending, depthWrite: false
     }));
     scene.add(embers);
 
-    /* Two big wireframes anchored off the content column */
+    /* Glowing central core behind the header — a bloomed torus knot */
+    const core = new THREE.Mesh(
+      new THREE.TorusKnotGeometry(1.05, .22, 120, 16, 2, 3),
+      new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff8a5c, transparent: true, opacity: .42 })
+    );
+    core.position.set(0, small ? 3.6 : 3.2, -3);
+    scene.add(core);
+
+    /* Two big wireframes anchored off the content column — brighter for bloom */
     const torus = new THREE.Mesh(
       new THREE.TorusGeometry(3, .9, 8, 40),
-      new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff6f4e, transparent: true, opacity: .10 })
+      new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff6f4e, transparent: true, opacity: .16 })
     );
     const ico = new THREE.Mesh(
       new THREE.IcosahedronGeometry(2.4, 1),
-      new THREE.MeshBasicMaterial({ wireframe: true, color: 0xffb56b, transparent: true, opacity: .08 })
+      new THREE.MeshBasicMaterial({ wireframe: true, color: 0xffb56b, transparent: true, opacity: .14 })
     );
     const k = small ? .7 : 1;
     torus.position.set(4.5 * k, 3 * k, -4);
     ico.position.set(-4.5 * k, -4 * k, -5);
     scene.add(torus, ico);
 
+    /* Bloom composer (desktop only — biggest GPU cost) */
+    let composer = null;
+    if (!mobile) {
+      composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .8, .5, .1));
+      composer.addPass(new OutputPass());
+    }
+
     function resize() {
-      renderer.setSize(window.innerWidth, window.innerHeight, false);
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const w = window.innerWidth, h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      if (composer) composer.setSize(w, h);
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
     }
     resize();
     let rT;
     window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(resize, 150); }, { passive: true });
 
-    const hoverable = matchMedia('(hover: hover)').matches;
     let mx = 0, my = 0;
     if (hoverable) {
       window.addEventListener('pointermove', e => {
@@ -438,30 +471,38 @@
       }, { passive: true });
     }
 
-    /* Background sinks slightly as the page scrolls */
-    let scrollY = 0;
+    /* Scroll fly-through: camera dollies toward the core, embers speed up */
+    let prog = 0;
     window.addEventListener('scroll', () => {
       const h = document.documentElement;
       const max = h.scrollHeight - h.clientHeight;
-      scrollY = max > 0 ? (h.scrollTop / max) * 1.5 : 0;
+      prog = max > 0 ? Math.min(h.scrollTop / max, 1) : 0;
     }, { passive: true });
 
     const clock = new THREE.Clock();
     const posAttr = pgeo.getAttribute('position');
     function tick() {
       const t = clock.getElapsedTime();
+      const emberBoost = 1 + prog * 1.8;
       for (let i = 0; i < N; i++) {
-        let y = posAttr.array[i * 3 + 1] + speed[i];
+        let y = posAttr.array[i * 3 + 1] + speed[i] * emberBoost;
         if (y > SPAN_Y) y = -SPAN_Y;
         posAttr.array[i * 3 + 1] = y;
         posAttr.array[i * 3] = baseX[i] + Math.sin(t * .4 + phase[i]) * .35;
       }
       posAttr.needsUpdate = true;
+      core.rotation.x += .004 + prog * .006;
+      core.rotation.y += .006 + prog * .008;
+      const cs = 1 + prog * .9;
+      core.scale.setScalar(cs);
       torus.rotation.x += .0008; torus.rotation.y += .0006;
       ico.rotation.y -= .0008;   ico.rotation.z += .0005;
-      camera.position.x += (mx * .4 - camera.position.x) * .05;
-      camera.position.y += ((-my * .3 - scrollY) - camera.position.y) * .05;
-      renderer.render(scene, camera);
+      /* dolly the camera through the scene as you scroll (11 → 5.5) */
+      const targetZ = 11 - prog * 5.5;
+      camera.position.x += (mx * .5 - camera.position.x) * .05;
+      camera.position.y += ((-my * .35 - prog * 1.2) - camera.position.y) * .05;
+      camera.position.z += (targetZ - camera.position.z) * .06;
+      if (composer) composer.render(); else renderer.render(scene, camera);
     }
 
     let running = false;
