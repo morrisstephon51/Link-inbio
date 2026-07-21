@@ -84,9 +84,19 @@ if (args.length === 0) {
   process.exit(1);
 }
 
+// Runtime allowlist — guard against invalid platform names reaching the Claude prompt
+const VALID_PLATFORMS = new Set<string>(['instagram', 'tiktok', 'facebook', 'youtube_shorts']);
+const requestedPlatforms = args[1] ? args[1].split(',') : [];
+const invalidPlatforms = requestedPlatforms.filter((p) => !VALID_PLATFORMS.has(p));
+if (invalidPlatforms.length > 0) {
+  console.error(`\n❌ Invalid platform(s): ${invalidPlatforms.join(', ')}`);
+  console.error(`   Valid platforms: ${[...VALID_PLATFORMS].join(', ')}`);
+  process.exit(1);
+}
+
 const input: AgentInput = {
   topic: args[0],
-  platforms: args[1] ? (args[1].split(',') as Platform[]) : undefined,
+  platforms: requestedPlatforms.length > 0 ? (requestedPlatforms as Platform[]) : undefined,
   inputType: (args[2] as 'topic' | 'event') ?? 'topic',
 };
 
