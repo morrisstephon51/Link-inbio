@@ -90,7 +90,7 @@
 - [[master-tracker]] — full project status
 - [[grant-research-log]] — all grants found, deadlines, status
 - [Command Center](https://morrisstephon51.github.io/Link-inbio/dashboard.html)
-- [The Plug AI Website](https://psychic-bassoon-cam6stef.vercel.app)
+- [The Plug AI Website](https://theplugai.info)
 - [DCEO Digital Equity Grant](https://dceo.illinois.gov/broadband/illinois-digital-equity-capacity-grant.html)
 - [Cook County Digital Equity Grants](https://digitalequity.cookcountyil.gov/our-work/grants-and-grantees)
 - [Kresge Foundation](https://www.kresge.org) — grantsmanagement@kresge.org
