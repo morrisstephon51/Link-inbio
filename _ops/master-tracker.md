@@ -51,7 +51,7 @@
 ### 🔌 The Plug AI Website
 | Field | Value |
 |---|---|
-| **URL** | https://psychic-bassoon-cam6stef.vercel.app |
+| **URL** | https://theplugai.info |
 | **Status** | ✅ Live |
 | **Last action** | Deployed, added to all link surfaces |
 | **Next action** | Add enrollment/interest form (links to community-intake-routing agent) |
