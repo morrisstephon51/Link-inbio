@@ -1,598 +1,746 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stephon Morris — Command Center</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #0a0a0f;
-      --surface: #13131a;
-      --surface2: #1c1c28;
-      --border: rgba(255,255,255,0.07);
-      --purple: #7c4dff;
-      --orange: #ff6d00;
-      --pink: #e91e8c;
-      --teal: #00bcd4;
-      --text: #f0f0f5;
-      --muted: #8888aa;
-      --radius: 12px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Command Center</title>
+<meta name="description" content="Every live site, repo, and real agent across Stefan's systems, checked live as you scroll.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230B0B1A'/><circle cx='16' cy='16' r='5' fill='%23F4B942'/></svg>">
+<link rel="stylesheet" href="scrollcraft.css">
+<style>
+  :root {
+    --sc-canvas:     #0B0B1A;
+    --sc-surface:    #14142A;
+    --sc-ink:        #F2F0EC;
+    --sc-ink-soft:   #9C9AB4;
+    --sc-accent:     #F4B942;
+    --sc-accent-ink: #14110C;
+    --sc-font-display: "Archivo", system-ui, sans-serif;
+    --sc-font-text:    "Geist", system-ui, sans-serif;
+    --sc-font-mono:    "Geist Mono", ui-monospace, "SF Mono", monospace;
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    /* Second structural colour: the fleet's own signal, not a page accent.
+       taste.md's one-accent rule allows a page-wide accent (amber, above) plus
+       a bounded functional colour for a distinct subsystem — this is used only
+       for agent/fleet status, never for CTAs, headings, or page chrome. */
+    --fleet-signal: #8A82F5; /* brightened from brand Electric Indigo #5B4FE8 for
+                                4.5:1+ contrast on the dark canvas — the raw
+                                brand value only cleared 3.46:1 */
 
-    /* ── Lock screen ── */
-    #lock-screen {
-      position: fixed; inset: 0; z-index: 9999;
-      background: #0a0a0f;
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 16px;
-    }
-    .lock-logo { font-size: 40px; }
-    #lock-screen h2 { font-size: 18px; font-weight: 600; }
-    #lock-screen p  { font-size: 13px; color: var(--muted); }
-    #pin-input {
-      width: 200px; padding: 12px 16px; font-size: 22px;
-      background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px; color: var(--text); text-align: center;
-      letter-spacing: 8px; outline: none; transition: border-color 0.2s;
-    }
-    #pin-input:focus { border-color: var(--purple); }
-    #pin-error { color: #ff5555; font-size: 12px; height: 16px; }
+    --status-live: #4ADE80;
+    --status-warn: #F4B942;
+    --status-down: #F76464;
+    --status-idle: #6B6A82;
+  }
 
-    /* ── Header ── */
-    header {
-      background: linear-gradient(135deg, #1f005c 0%, #5b0060 35%, #ac255e 70%, #ff6f4e 100%);
-      padding: 32px 24px 28px;
-      display: flex; align-items: center; gap: 20px;
-    }
-    header img {
-      width: 68px; height: 68px; border-radius: 50%;
-      object-fit: cover; border: 2px solid rgba(255,255,255,0.35); flex-shrink: 0;
-    }
-    .header-text h1 { font-size: 20px; font-weight: 700; }
-    .header-text p  { font-size: 13px; opacity: 0.75; margin-top: 3px; }
-    .header-actions {
-      margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
-    }
-    .header-actions a {
-      color: #fff; text-decoration: none; font-size: 12px; font-weight: 500;
-      background: rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 14px;
-      transition: background 0.2s; white-space: nowrap;
-    }
-    .header-actions a:hover { background: rgba(255,255,255,0.28); }
+  @font-face {
+    font-family: "Archivo";
+    src: local("Archivo");
+    font-weight: 400 800;
+  }
 
-    /* ── Page ── */
-    .page { max-width: 1140px; margin: 0 auto; padding: 32px 20px 60px; }
+  body { background: var(--sc-canvas); }
 
-    /* ── Search ── */
-    .search-wrap { margin-bottom: 28px; }
-    #search {
-      width: 100%; padding: 11px 16px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; color: var(--text); font-size: 14px; outline: none;
-      transition: border-color 0.2s;
-    }
-    #search:focus { border-color: var(--purple); }
-    #search::placeholder { color: var(--muted); }
+  /* ---------- App-chrome status bar (Live Surface nav: not a marketing bar) ---------- */
+  .status-bar {
+    position: fixed; inset: 0 0 auto 0; z-index: var(--sc-z-chrome);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--sc-4);
+    padding: 0.7rem clamp(1rem, 4vw, 2rem);
+    background: color-mix(in oklab, var(--sc-canvas) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--sc-hairline);
+    font-family: var(--sc-font-mono);
+    font-size: var(--sc-t-xs);
+    color: var(--sc-ink-soft);
+  }
+  .status-bar__group { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+  .status-bar__label { color: var(--sc-ink); letter-spacing: var(--sc-track-wide); text-transform: uppercase; font-size: 0.68rem; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-idle); flex: none; }
+  .status-dot--live { background: var(--status-live); box-shadow: 0 0 0 3px color-mix(in oklab, var(--status-live) 25%, transparent); }
+  .status-dot--warn { background: var(--status-warn); }
+  .status-dot--down { background: var(--status-down); }
+  .status-bar__act { color: var(--sc-ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-bar__tally { font-variant-numeric: tabular-nums; color: var(--sc-ink); }
+  @media (max-width: 640px) { .status-bar__act-full { display: none; } }
 
-    /* ── Section ── */
-    .section { margin-bottom: 36px; }
-    .section-title {
-      font-size: 10px; font-weight: 700; letter-spacing: 2px;
-      text-transform: uppercase; color: var(--muted);
-      margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
-    }
-    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  main { padding-top: 2.6rem; }
 
-    /* ── Grid ── */
-    .grid   { display: grid; gap: 10px; }
-    .grid-2 { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-    .grid-3 { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
-    .grid-4 { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  /* ---------- Shared section rhythm ---------- */
+  .cc-eyebrow {
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs);
+    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+    color: var(--sc-ink-soft);
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .cc-eyebrow::before { content: ""; width: 1.4rem; height: 1px; background: var(--sc-accent); display: inline-block; }
 
-    /* ── Card ── */
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px 15px;
-      display: flex; align-items: flex-start; gap: 11px;
-      text-decoration: none; color: inherit;
-      transition: background 0.18s, border-color 0.18s, transform 0.12s;
-    }
-    .card:hover {
-      background: var(--surface2); border-color: rgba(124,77,255,0.3);
-      transform: translateY(-2px);
-    }
-    .card.live { border-left: 3px solid #1db954; }
-    .card.live:hover { border-color: #1db954; }
+  /* ---------- Act A: boot / real counts ---------- */
+  .boot {
+    min-height: 92vh;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: var(--sc-7);
+  }
+  .boot__counts {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--sc-6);
+    border-top: 1px solid var(--sc-hairline);
+    padding-top: var(--sc-6);
+  }
+  .boot__count .num {
+    font-family: var(--sc-font-display); font-weight: 700;
+    font-size: var(--sc-t-3xl); letter-spacing: var(--sc-track-tight);
+    line-height: var(--sc-leading-none);
+    color: var(--sc-ink); font-variant-numeric: tabular-nums;
+  }
+  .boot__count .cap { color: var(--sc-ink-soft); font-size: var(--sc-t-sm); margin-top: 0.35rem; }
 
-    .card-icon { font-size: 19px; flex-shrink: 0; margin-top: 1px; }
-    .card-body { flex: 1; min-width: 0; }
-    .card-title { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-sub   { font-size: 11px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* ---------- Act B: fleet roster (pin) ---------- */
+  .fleet-stage {
+    display: grid; grid-template-columns: minmax(0, 22rem) 1fr;
+    gap: var(--sc-9);
+    align-items: start;
+    /* No position:relative here — this element IS .sc-stage (same node), and
+       the engine sets it position:sticky for the whole pin mechanism. A
+       same-specificity position rule declared after the engine's stylesheet
+       wins the cascade and silently turns every pin act on the page into
+       ordinary static flow. #fleetAct already gets position:relative from
+       the engine's own .sc-act--pinned class, so anchor there instead. */
+  }
+  .fleet-detail__source { color: var(--sc-ink-soft); font-size: var(--sc-t-xs); margin-top: var(--sc-6); }
+  @media (max-width: 900px) { .fleet-stage { grid-template-columns: 1fr; } }
+  .fleet-roster { display: flex; flex-direction: column; gap: 0.9rem; }
+  .fleet-row {
+    all: unset;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    padding: 0.7rem 0 0.7rem 0.9rem; border-bottom: 1px solid var(--sc-hairline);
+    border-left: 2px solid transparent;
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-sm);
+    transition: border-color 260ms var(--sc-ease-out);
+    width: 100%; box-sizing: border-box; cursor: pointer;
+  }
+  .fleet-row:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: -2px; }
+  /* Every row stays independently legible at rest (ink-soft on canvas clears
+     7.1:1) — dimming a whole row to opacity:0.32 to imply "not selected"
+     dropped real content to ~1.7:1, well under the 4.5:1 body-text floor.
+     The current row is marked by weight and an accent rule, not by hiding
+     the others. */
+  .fleet-row__name { color: var(--sc-ink-soft); }
+  .fleet-row__meta { color: var(--sc-ink-soft); text-align: right; }
+  .fleet-row.is-current { border-left-color: var(--sc-accent); }
+  .fleet-row.is-current .fleet-row__name { color: var(--sc-ink); font-weight: 600; }
+  /* No position:sticky here: .sc-stage above already pins the whole grid as
+     one unit for the act's duration. A second, independently-timed sticky
+     context on this child lags the stage's own release by a few frames and
+     clips the last text line against .sc-stage's overflow:clip right as the
+     act hands off to the next section. */
+  .fleet-detail { min-height: 16rem; }
+  .fleet-detail__role { color: var(--sc-ink-soft); }
+  .fleet-detail__name {
+    font-family: var(--sc-font-display); font-weight: 700;
+    font-size: var(--sc-t-2xl); color: var(--sc-ink);
+    display: flex; align-items: center; gap: 0.7rem;
+  }
+  .fleet-detail__stats { display: flex; gap: var(--sc-7); margin-top: var(--sc-6); }
+  .fleet-detail__stats .num { font-family: var(--sc-font-mono); font-size: var(--sc-t-xl); color: var(--fleet-signal); font-variant-numeric: tabular-nums; }
+  .fleet-detail__stats .cap { color: var(--sc-ink-soft); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide); }
 
-    /* ── Badge ── */
-    .badge {
-      font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
-      text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; align-self: flex-start;
-    }
-    .badge-purple { background: rgba(124,77,255,0.18); color: #b39dff; }
-    .badge-orange { background: rgba(255,109,0,0.18);  color: #ffaa66; }
-    .badge-pink   { background: rgba(233,30,140,0.18); color: #ff80c0; }
-    .badge-green  { background: rgba(29,185,84,0.18);  color: #5cf08a; }
-    .badge-blue   { background: rgba(30,150,233,0.18); color: #80d0ff; }
-    .badge-teal   { background: rgba(0,188,212,0.18);  color: #80e5f0; }
-    .badge-gray   { background: rgba(255,255,255,0.07); color: var(--muted); }
+  /* ---------- Act D: products (pointer/tilt) ---------- */
+  .products { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sc-6); }
+  @media (max-width: 800px) { .products { grid-template-columns: 1fr; } }
+  .product-card {
+    background: var(--sc-surface); border: 1px solid var(--sc-hairline);
+    border-radius: var(--sc-r-lg); padding: var(--sc-7);
+    display: flex; flex-direction: column; gap: var(--sc-4);
+    transform-style: preserve-3d; will-change: transform;
+    text-decoration: none;
+  }
+  .product-card__domain { font-family: var(--sc-font-mono); font-size: var(--sc-t-sm); color: var(--sc-accent); }
+  .product-card h3 { font-family: var(--sc-font-display); font-size: var(--sc-t-xl); color: var(--sc-ink); margin: 0; letter-spacing: var(--sc-track-snug); }
+  .product-card p { color: var(--sc-ink-soft); margin: 0; }
+  .product-card__status { display: flex; align-items: center; gap: 0.5rem; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); margin-top: auto; }
 
-    /* ── Status bar ── */
-    .status-bar {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 12px 18px;
-      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    }
-    .status-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
-    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .dot-green  { background: #1db954; box-shadow: 0 0 6px #1db954aa; }
-    .dot-yellow { background: #f5a623; box-shadow: 0 0 6px #f5a623aa; }
-    .dot-gray   { background: #555; }
+  /* ---------- Act E: convergence grid (reveal, THE PEAK) ---------- */
+  .peak-head { text-align: left; max-width: 46rem; }
+  .launch-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1px; background: var(--sc-hairline);
+    border: 1px solid var(--sc-hairline); border-radius: var(--sc-r-lg);
+    overflow: hidden; margin-top: var(--sc-8);
+  }
+  .launch-card {
+    background: var(--sc-canvas); padding: var(--sc-6);
+    display: flex; flex-direction: column; gap: 0.6rem;
+    text-decoration: none; position: relative;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 520ms var(--sc-ease-out);
+  }
+  .launch-card.is-checked { clip-path: inset(0 0 0 0); }
+  .launch-card__top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .launch-card__name { font-family: var(--sc-font-display); font-weight: 600; color: var(--sc-ink); font-size: var(--sc-t-base); }
+  .launch-card__domain { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); }
+  .launch-card__state {
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs);
+    display: flex; align-items: center; gap: 0.4rem; color: var(--sc-ink-soft);
+  }
+  .launch-note { margin-top: var(--sc-7); color: var(--sc-ink-soft); font-size: var(--sc-t-sm); max-width: 46rem; }
+  .launch-note code { font-family: var(--sc-font-mono); color: var(--sc-ink); }
 
-    /* ── Highlight card (featured) ── */
-    .card-featured {
-      background: linear-gradient(135deg, rgba(124,77,255,0.12), rgba(233,30,140,0.08));
-      border: 1px solid rgba(124,77,255,0.25);
-    }
-    .card-featured:hover { border-color: rgba(124,77,255,0.5); }
+  /* ---------- Act F: close (flow + real input) ---------- */
+  .close-act { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; gap: var(--sc-7); }
+  .close-status {
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-lg);
+    color: var(--sc-ink); display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
+  }
+  .close-status .num { color: var(--status-live); font-variant-numeric: tabular-nums; }
+  .filter-field {
+    display: flex; align-items: center; gap: 0.7rem;
+    border: 1px solid var(--sc-hairline-strong); border-radius: var(--sc-r-md);
+    padding: 0.9rem 1.1rem; background: var(--sc-surface);
+  }
+  .filter-field input {
+    all: unset; flex: 1; font-family: var(--sc-font-mono);
+    font-size: var(--sc-t-base); color: var(--sc-ink);
+  }
+  .filter-field input::placeholder { color: var(--sc-ink-soft); }
+  .filter-results { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; max-height: 16rem; overflow-y: auto; }
+  .filter-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.6rem 0.2rem; border-bottom: 1px solid var(--sc-hairline);
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-sm);
+  }
+  .filter-row a { color: var(--sc-ink); text-decoration: none; }
+  .filter-row a:hover, .filter-row a:focus-visible { color: var(--sc-accent); }
+  .filter-empty { color: var(--sc-ink-soft); font-size: var(--sc-t-sm); padding: 0.6rem 0.2rem; }
 
-    /* ── Quick launch strip ── */
-    .quick-launch {
-      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 36px;
-    }
-    .ql-btn {
-      display: flex; align-items: center; gap: 8px;
-      background: linear-gradient(135deg, rgba(124,77,255,0.2), rgba(233,30,140,0.12));
-      border: 1px solid rgba(124,77,255,0.3);
-      border-radius: 10px; padding: 10px 16px;
-      text-decoration: none; color: var(--text); font-size: 13px; font-weight: 500;
-      transition: background 0.2s, transform 0.12s;
-      white-space: nowrap;
-    }
-    .ql-btn:hover { background: linear-gradient(135deg, rgba(124,77,255,0.35), rgba(233,30,140,0.2)); transform: translateY(-1px); }
-    .ql-btn span { font-size: 16px; }
+  .cc-cta {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--sc-accent); color: var(--sc-accent-ink);
+    font-family: var(--sc-font-display); font-weight: 700;
+    padding: 0.85rem 1.4rem; border-radius: var(--sc-r-pill);
+    text-decoration: none; align-self: flex-start;
+    box-shadow: var(--sc-e2);
+  }
+  .cc-cta:hover, .cc-cta:focus-visible { filter: brightness(1.06); }
 
-    /* ── Footer ── */
-    footer {
-      text-align: center; font-size: 11px; color: var(--muted);
-      padding-top: 24px; border-top: 1px solid var(--border); margin-top: 12px;
-    }
-  </style>
+  .provenance { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); }
+  .provenance a { color: var(--sc-ink-soft); }
+
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- PIN lock, carried over unchanged from the previous dashboard.html ----------
+     Same CORRECT_HASH, same sessionStorage key, same check — only the visual
+     treatment changed to match this page's tokens. The overlay covers the
+     page instead of display:none-ing it, so ScrollCraft can lay out the real
+     page underneath while it's covered instead of measuring a hidden, zero-
+     height document. */
+  #lock-screen {
+    position: fixed; inset: 0; z-index: 999;
+    background: var(--sc-canvas);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem;
+  }
+  .lock-logo { font-size: 2.5rem; }
+  #lock-screen h2 { font-family: var(--sc-font-display); font-size: var(--sc-t-lg); color: var(--sc-ink); }
+  #lock-screen p { font-size: var(--sc-t-sm); color: var(--sc-ink-soft); }
+  #pin-input {
+    width: 12rem; padding: 0.8rem 1rem; font-size: 1.4rem;
+    background: var(--sc-surface); border: 1px solid var(--sc-hairline-strong);
+    border-radius: var(--sc-r-md); color: var(--sc-ink); text-align: center;
+    letter-spacing: 0.5rem; outline: none; transition: border-color 200ms var(--sc-ease-out);
+    font-family: var(--sc-font-mono);
+  }
+  #pin-input:focus-visible { border-color: var(--sc-accent); }
+  #pin-error { color: var(--status-down); font-size: var(--sc-t-xs); height: 1rem; }
+  body.is-locked { overflow: hidden; }
+</style>
 </head>
-<body>
+<body class="is-locked">
 
-<!-- Lock Screen -->
 <div id="lock-screen">
-  <div class="lock-logo">🔐</div>
+  <div class="lock-logo" aria-hidden="true">🔐</div>
   <h2>Command Center</h2>
   <p>Enter your PIN to continue</p>
-  <input type="password" id="pin-input" maxlength="6" placeholder="••••••" autocomplete="off" />
+  <input type="password" id="pin-input" maxlength="6" placeholder="••••••" autocomplete="off">
   <div id="pin-error"></div>
 </div>
 
-<!-- Main Content -->
-<div id="main-content" style="display:none">
 
-<header>
-  <img src="https://live.staticflickr.com/65535/53460632619_d32a5fa3c9_b.jpg" alt="Stephon Morris" />
-  <div class="header-text">
-    <h1>Stephon Morris</h1>
-    <p>AI Educator · Founder, The Plug AI · Chicago, IL</p>
+<span data-sc-progress></span>
+<div class="sc-grain" aria-hidden="true"></div>
+
+<div class="status-bar" role="status" aria-live="polite">
+  <div class="status-bar__group">
+    <span class="status-dot" id="bootDot" aria-hidden="true"></span>
+    <span class="status-bar__label">Command Center</span>
   </div>
-  <div class="header-actions">
-    <a href="resume.html">Resume</a>
-    <a href="https://theplugai.info" target="_blank">The Plug AI ↗</a>
-    <a href="https://stefan-portfolio-eight.vercel.app" target="_blank">Portfolio ↗</a>
-    <a href="https://www.linkedin.com/in/stephonmorris51/" target="_blank">LinkedIn ↗</a>
-    <a href="index.html">Link-in-Bio</a>
+  <div class="status-bar__group status-bar__act">
+    <span class="status-bar__act-full" id="actLabel">Recognition</span>
   </div>
-</header>
-
-<div class="page">
-
-  <!-- Search -->
-  <div class="search-wrap">
-    <input type="text" id="search" placeholder="Search everything — projects, docs, tools, agents…" />
+  <div class="status-bar__group">
+    <span class="status-bar__tally" id="tallyLabel">— / — live</span>
   </div>
-
-  <!-- Quick Launch -->
-  <div class="quick-launch">
-    <a class="ql-btn" href="https://theplugai.info" target="_blank"><span>🔌</span> The Plug AI Website</a>
-    <a class="ql-btn" href="https://agent-world-olive.vercel.app" target="_blank"><span>🕹️</span> MUNDI Agent Dashboard</a>
-    <a class="ql-btn" href="https://agent-world-olive.vercel.app/architecture" target="_blank"><span>⚛</span> Agent Architecture</a>
-    <a class="ql-btn" href="resume.html"><span>📄</span> Live Resume</a>
-    <a class="ql-btn" href="https://supabase.com/dashboard/project/fqdrvhpdntflfkqxlvkq" target="_blank"><span>🗄️</span> Supabase DB</a>
-    <a class="ql-btn" href="https://console.anthropic.com/" target="_blank"><span>⚡</span> Anthropic Console</a>
-    <a class="ql-btn" href="https://github.com/morrisstephon51" target="_blank"><span>🐙</span> GitHub</a>
-  </div>
-
-  <!-- Infrastructure -->
-  <div class="section">
-    <div class="section-title">Infrastructure</div>
-    <div class="status-bar">
-      <div class="status-pill"><div class="dot dot-green"></div><span>Supabase — morrisstephon51's Project (us-west-1)</span></div>
-      <div class="status-pill"><div class="dot dot-yellow"></div><span>Supabase — Cam II (inactive)</span></div>
-      <div class="status-pill"><div class="dot dot-green"></div><span>GitHub Pages — morrisstephon51.github.io</span></div>
-      <div class="status-pill"><div class="dot dot-green"></div><span>Vercel — 6 live apps</span></div>
-      <a href="https://supabase.com/dashboard/project/fqdrvhpdntflfkqxlvkq" target="_blank" style="margin-left:auto;font-size:11px;color:var(--purple);text-decoration:none;">Supabase →</a>
-      <a href="https://vercel.com/cam6stef" target="_blank" style="font-size:11px;color:var(--teal);text-decoration:none;">Vercel →</a>
-    </div>
-  </div>
-
-  <!-- Live Deployed Apps -->
-  <div class="section">
-    <div class="section-title">Live Deployed Apps</div>
-    <div class="grid grid-3">
-      <a class="card card-featured live" href="https://theplugai.info" target="_blank">
-        <div class="card-icon">🔌</div>
-        <div class="card-body">
-          <div class="card-title">The Plug AI Website</div>
-          <div class="card-sub">theplugai.info</div>
-        </div>
-        <span class="badge badge-green">Live</span>
-      </a>
-      <a class="card card-featured live" href="https://stefan-portfolio-eight.vercel.app" target="_blank">
-        <div class="card-icon">🎨</div>
-        <div class="card-body">
-          <div class="card-title">Stefan Portfolio</div>
-          <div class="card-sub">stefan-portfolio-eight.vercel.app</div>
-        </div>
-        <span class="badge badge-green">Live</span>
-      </a>
-      <a class="card card-featured live" href="https://agent-world-olive.vercel.app" target="_blank">
-        <div class="card-icon">🕹️</div>
-        <div class="card-body">
-          <div class="card-title">MUNDI Agent Dashboard</div>
-          <div class="card-sub">agent-world-olive.vercel.app · free-tier fix + /architecture merged, production redeploy pending</div>
-        </div>
-        <span class="badge badge-orange">Stale build</span>
-      </a>
-      <a class="card live" href="https://content-machine-wine.vercel.app" target="_blank">
-        <div class="card-icon">🤖</div>
-        <div class="card-body">
-          <div class="card-title">Content Machine</div>
-          <div class="card-sub">content-machine-wine.vercel.app · repo archived, deploy still up</div>
-        </div>
-        <span class="badge badge-gray">Legacy</span>
-      </a>
-      <a class="card live" href="https://ai-video-reel-generator.vercel.app" target="_blank">
-        <div class="card-icon">🎬</div>
-        <div class="card-body">
-          <div class="card-title">AI Video Reel Generator</div>
-          <div class="card-sub">ai-video-reel-generator.vercel.app</div>
-        </div>
-        <span class="badge badge-green">Live</span>
-      </a>
-      <a class="card live" href="https://psychic-octo-engine-psi.vercel.app" target="_blank">
-        <div class="card-icon">🔬</div>
-        <div class="card-body">
-          <div class="card-title">Psychic Octo Engine</div>
-          <div class="card-sub">psychic-octo-engine-psi.vercel.app · repo archived, deploy still up</div>
-        </div>
-        <span class="badge badge-gray">Legacy</span>
-      </a>
-      <a class="card" href="https://community-intake-routing.vercel.app" target="_blank">
-        <div class="card-icon">🔀</div>
-        <div class="card-body">
-          <div class="card-title">Community Intake & Routing</div>
-          <div class="card-sub">Confirmed dead (404) 2026-07-04 — matches archived status</div>
-        </div>
-        <span class="badge badge-gray">Dead</span>
-      </a>
-      <a class="card live" href="https://morrisstephon51.github.io/Link-inbio/" target="_blank">
-        <div class="card-icon">🔗</div>
-        <div class="card-body">
-          <div class="card-title">Link-in-Bio</div>
-          <div class="card-sub">morrisstephon51.github.io/Link-inbio</div>
-        </div>
-        <span class="badge badge-green">Live</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- The Plug AI -->
-  <div class="section">
-    <div class="section-title">The Plug AI — Program Docs</div>
-    <div class="grid grid-3">
-      <a class="card card-featured live" href="https://theplugai.info" target="_blank"><div class="card-icon">🔌</div><div class="card-body"><div class="card-title">The Plug AI Website</div><div class="card-sub">Live site · theplugai.info</div></div><span class="badge badge-green">Live</span></a>
-      <a class="card card-featured" href="https://docs.google.com/document/d/1p0GDXhmnPmhXYhyJJ_YdT07DrUkdWL0yObfQ1wBMhu8/edit" target="_blank"><div class="card-icon">📚</div><div class="card-body"><div class="card-title">Digital Literacy Program</div><div class="card-sub">Full program design doc · AI education curriculum</div></div><span class="badge badge-pink">Drive</span></a>
-      <a class="card card-featured" href="https://docs.google.com/document/d/1WdMJhvQzmfgu3eBl255Oa8em28oKhB-mrK8qn1l7S9U/edit" target="_blank"><div class="card-icon">📋</div><div class="card-body"><div class="card-title">Weekly Content — All Modules</div><div class="card-sub">Full curriculum content library</div></div><span class="badge badge-pink">Drive</span></a>
-      <a class="card card-featured" href="https://docs.google.com/document/d/1JH62U5cXCFz_ocQik5qTh438dZx5UNf4dpzLtmGvPcI/edit" target="_blank"><div class="card-icon">🎯</div><div class="card-body"><div class="card-title">Program Outcomes & Impact</div><div class="card-sub">Learner outcomes · what people achieve</div></div><span class="badge badge-pink">Drive</span></a>
-      <a class="card" href="https://docs.google.com/document/d/19Ie3ANKR8X6jwOB3SUFCHFkS2Vng0UtcDfNN8uCRGDk/edit" target="_blank"><div class="card-icon">🧠</div><div class="card-body"><div class="card-title">Stef's Claude.md</div><div class="card-sub">AI system context · memory & instructions</div></div><span class="badge badge-pink">Drive</span></a>
-      <a class="card" href="https://drive.google.com/file/d/17S2pDEDs74PO1-zN0VdXTOWLvFC8rhG7/view" target="_blank"><div class="card-icon">🖼️</div><div class="card-body"><div class="card-title">The Plug AI Logo</div><div class="card-sub">Brand asset — PNG</div></div><span class="badge badge-pink">Asset</span></a>
-    </div>
-  </div>
-
-  <!-- Real Agent Fleet -->
-  <div class="section">
-    <div class="section-title">Real Agent Fleet (verified, MUNDI-tracked)</div>
-    <div class="grid grid-3">
-      <a class="card card-featured" href="https://agent-world-olive.vercel.app" target="_blank">
-        <div class="card-icon">🛰️</div>
-        <div class="card-body">
-          <div class="card-title">clawd / OpenClaw</div>
-          <div class="card-sub">Always-on Telegram gateway, coordination hub</div>
-        </div>
-        <span class="badge badge-green">Running</span>
-      </a>
-      <div class="card">
-        <div class="card-icon">💻</div>
-        <div class="card-body">
-          <div class="card-title">codex</div>
-          <div class="card-sub">Per-task coding agent</div>
-        </div>
-        <span class="badge badge-green">Running</span>
-      </div>
-      <div class="card">
-        <div class="card-icon">🌐</div>
-        <div class="card-body">
-          <div class="card-title">antigravity</div>
-          <div class="card-sub">Per-task general agent</div>
-        </div>
-        <span class="badge badge-green">Running</span>
-      </div>
-      <a class="card card-featured" href="https://content-machine-wine.vercel.app" target="_blank">
-        <div class="card-icon">📡</div>
-        <div class="card-body">
-          <div class="card-title">Content Pipeline Agent</div>
-          <div class="card-sub">Real work in psychic-bassoon/content-engine</div>
-        </div>
-        <span class="badge badge-green">Running</span>
-      </a>
-      <div class="card">
-        <div class="card-icon">✨</div>
-        <div class="card-body">
-          <div class="card-title">gemini-agent</div>
-          <div class="card-sub">Needs GEMINI_API_KEY (aistudio.google.com)</div>
-        </div>
-        <span class="badge badge-orange">Not provisioned</span>
-      </div>
-      <div class="card">
-        <div class="card-icon">🔎</div>
-        <div class="card-body">
-          <div class="card-title">perplexity-agent</div>
-          <div class="card-sub">Needs PERPLEXITY_API_KEY (perplexity.ai)</div>
-        </div>
-        <span class="badge badge-orange">Not provisioned</span>
-      </div>
-      <div class="card card-featured">
-        <div class="card-icon">🧭</div>
-        <div class="card-body">
-          <div class="card-title">MUNDI Router</div>
-          <div class="card-sub">~/clawd/router — classifies tasks, routes to cheapest qualified agent</div>
-        </div>
-        <span class="badge badge-purple">Built 07-03</span>
-      </div>
-      <a class="card" href="https://github.com/morrisstephon51/kai-obsidian-vault/blob/main/07-AI/Subagent%20Registry.md" target="_blank">
-        <div class="card-icon">🗂️</div>
-        <div class="card-body">
-          <div class="card-title">Subagent Registry — all 233</div>
-          <div class="card-sub">Full categorized list · marketing, engineering, GIS, sales, security + 55 more</div>
-        </div>
-        <span class="badge badge-blue">Reference</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- Archived / Legacy Agents -->
-  <div class="section">
-    <div class="section-title">Archived Agents & Repos (2026-07-03 fleet audit — no real implementation found)</div>
-    <div class="grid grid-3">
-      <a class="card" href="https://github.com/morrisstephon51/Enrollment_Funnel_Agent" target="_blank">
-        <div class="card-icon">📊</div>
-        <div class="card-body">
-          <div class="card-title">Enrollment Funnel Agent</div>
-          <div class="card-sub">BigHeart Track 2 — archived persona</div>
-        </div>
-        <span class="badge badge-gray">Archived</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/job_opportunity_scanner" target="_blank">
-        <div class="card-icon">🎯</div>
-        <div class="card-body">
-          <div class="card-title">Job Opportunity Scanner</div>
-          <div class="card-sub">Archived persona</div>
-        </div>
-        <span class="badge badge-gray">Archived</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/agent_I_content" target="_blank">
-        <div class="card-icon">📱</div>
-        <div class="card-body">
-          <div class="card-title">Agent I — Content</div>
-          <div class="card-sub">First-gen link-in-bio + content automation agent</div>
-        </div>
-        <span class="badge badge-purple">v1</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/agent-II" target="_blank">
-        <div class="card-icon">⚙️</div>
-        <div class="card-body">
-          <div class="card-title">Agent II</div>
-          <div class="card-sub">Next-gen agent build — in development</div>
-        </div>
-        <span class="badge badge-gray">Dev</span>
-      </a>
-      <a class="card" href="https://github.com/morrisstephon51/-Community_intake_Routing" target="_blank">
-        <div class="card-icon">🔀</div>
-        <div class="card-body">
-          <div class="card-title">Community Intake & Routing</div>
-          <div class="card-sub">Archived — zero real implementation found</div>
-        </div>
-        <span class="badge badge-gray">Archived</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- BigHeart Health -->
-  <div class="section">
-    <div class="section-title">BigHeart Health</div>
-    <div class="grid grid-3">
-      <a class="card" href="https://docs.google.com/document/d/17fNON44gd8ATSxkO2flqAujJt9iWL1w4L1FKFFAV1eM/edit" target="_blank"><div class="card-icon">🎥</div><div class="card-body"><div class="card-title">Church Video Campaign Bible</div><div class="card-sub">Full content strategy doc · outreach campaigns</div></div><span class="badge badge-orange">Drive</span></a>
-      <a class="card" href="https://docs.google.com/spreadsheets/d/127eOak8vAxxGZIVNcSAE3fo5Flb6YhV8aFCV00Hsfvo/edit" target="_blank"><div class="card-icon">⛪</div><div class="card-body"><div class="card-title">Church Community Links & QR</div><div class="card-sub">Church outreach tracker + QR campaigns</div></div><span class="badge badge-orange">Sheets</span></a>
-      <a class="card" href="https://docs.google.com/spreadsheets/d/1ZzjLR5ZxOBbA6b9wvEA8NUhW9wJQ_sKxAnE5UulEN8k/edit" target="_blank"><div class="card-icon">📊</div><div class="card-body"><div class="card-title">Program Planning Template</div><div class="card-sub">BigHeart program planning framework</div></div><span class="badge badge-orange">Sheets</span></a>
-      <a class="card" href="https://docs.google.com/document/d/1YNlob3qZ4175vMuwLjPNXYoIba6YgMXXRTiBPgUMq6s/edit" target="_blank"><div class="card-icon">✉️</div><div class="card-body"><div class="card-title">BHH Email Signature</div><div class="card-sub">BigHeart Health brand email template</div></div><span class="badge badge-orange">Drive</span></a>
-      <a class="card card-featured" href="https://docs.google.com/document/d/1MyueiZTDqoeszSwaXEHI-lXwvoJE6EBHtw1WvPxmFGc/edit" target="_blank"><div class="card-icon">📅</div><div class="card-body"><div class="card-title">Provider Booking Guide ✦ Revised</div><div class="card-sub">Expanded 9-slide ops guide · booking rules, escalation, standards</div></div><span class="badge badge-orange">Updated</span></a>
-      <a class="card" href="https://docs.google.com/presentation/d/1UKMz5Cf69m2lgmkEcBEu1dF1_0ajcpukLRsVmsQhk-8/edit" target="_blank"><div class="card-icon">📅</div><div class="card-body"><div class="card-title">Provider Bookings (Original)</div><div class="card-sub">Original 2-slide reference deck</div></div><span class="badge badge-gray">Archive</span></a>
-    </div>
-  </div>
-
-  <!-- CES Program -->
-  <div class="section">
-    <div class="section-title">CES Program Docs</div>
-    <div class="grid grid-3">
-      <a class="card" href="https://docs.google.com/document/d/1qCY1H9FiUnQrwE3xJ5qkJ6rJz6CrQrPxUFT4wODN5dI/edit" target="_blank"><div class="card-icon">📖</div><div class="card-body"><div class="card-title">Knowledge Base v2</div><div class="card-sub">CES internal reference program · dept-wide tool</div></div><span class="badge badge-blue">Drive</span></a>
-      <a class="card card-featured" href="https://docs.google.com/document/d/12oeJbY3_ehrXETQfj6sk8C4BfjVxbEs0VHhyjjqKnJs/edit" target="_blank"><div class="card-icon">📊</div><div class="card-body"><div class="card-title">Knowledge Base Slides ✦ Revision Notes</div><div class="card-sub">Audit + recommended updates · contact info & creator credit</div></div><span class="badge badge-blue">Updated</span></a>
-      <a class="card" href="https://docs.google.com/presentation/d/12tuNe2zYaT-ou4qrnbBB-3n37ispakIJ5CDjZM_2hzs/edit" target="_blank"><div class="card-icon">📊</div><div class="card-body"><div class="card-title">Knowledge Base Slides (Original)</div><div class="card-sub">Full 3-phase program build · comprehensive</div></div><span class="badge badge-gray">Original</span></a>
-      <a class="card" href="https://docs.google.com/document/d/1pniCJEZJ_RnZQi_XZuUM3CoGkx3mI0_d4ZxBFp5ed48/edit" target="_blank"><div class="card-icon">📋</div><div class="card-body"><div class="card-title">SOP — Triple Booking</div><div class="card-sub">Standard operating procedure · complex scheduling</div></div><span class="badge badge-blue">SOP</span></a>
-    </div>
-  </div>
-
-  <!-- GitHub Repos -->
-  <div class="section">
-    <div class="section-title">GitHub Repositories</div>
-    <div class="grid grid-2">
-      <a class="card live" href="https://github.com/morrisstephon51/psychic-bassoon" target="_blank"><div class="card-icon">🔌</div><div class="card-body"><div class="card-title">psychic-bassoon</div><div class="card-sub">The Plug AI Website · Vercel deployed</div></div><span class="badge badge-green">Live</span></a>
-      <a class="card live" href="https://github.com/morrisstephon51/Link-inbio" target="_blank"><div class="card-icon">🔗</div><div class="card-body"><div class="card-title">Link-inbio</div><div class="card-sub">Link-in-bio + Command Center · GitHub Pages</div></div><span class="badge badge-green">Live</span></a>
-      <a class="card live" href="https://github.com/morrisstephon51/kai-obsidian-vault" target="_blank"><div class="card-icon">🧠</div><div class="card-body"><div class="card-title">kai-obsidian-vault</div><div class="card-sub">Private · second brain, synced via obsidian-git</div></div><span class="badge badge-purple">Private</span></a>
-      <a class="card live" href="https://github.com/morrisstephon51/mundi-agent-dashboard" target="_blank"><div class="card-icon">🕹️</div><div class="card-body"><div class="card-title">mundi-agent-dashboard</div><div class="card-sub">Private · current code, not yet what's deployed live</div></div><span class="badge badge-purple">Private</span></a>
-      <a class="card live" href="https://github.com/morrisstephon51/ai-video-reel-generator" target="_blank"><div class="card-icon">🎬</div><div class="card-body"><div class="card-title">ai-video-reel-generator</div><div class="card-sub">Remotion video pipeline · Vercel deployed</div></div><span class="badge badge-green">Live</span></a>
-      <a class="card live" href="https://github.com/morrisstephon51/Stefan-Portfolio" target="_blank"><div class="card-icon">🎨</div><div class="card-body"><div class="card-title">Stefan-Portfolio</div><div class="card-sub">Portfolio v2 · currently deployed</div></div><span class="badge badge-green">Live</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/content-machine" target="_blank"><div class="card-icon">🤖</div><div class="card-body"><div class="card-title">content-machine</div><div class="card-sub">Archived 07-03 · quality agents ported to psychic-bassoon</div></div><span class="badge badge-gray">Archived</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/psychic-octo-engine" target="_blank"><div class="card-icon">🔬</div><div class="card-body"><div class="card-title">psychic-octo-engine</div><div class="card-sub">Archived 07-03 · Vercel deploy still live</div></div><span class="badge badge-gray">Archived</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/-Community_intake_Routing" target="_blank"><div class="card-icon">🔀</div><div class="card-body"><div class="card-title">Community Intake Routing</div><div class="card-sub">Archived — zero real implementation found</div></div><span class="badge badge-gray">Archived</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/Enrollment_Funnel_Agent" target="_blank"><div class="card-icon">📊</div><div class="card-body"><div class="card-title">Enrollment Funnel Agent</div><div class="card-sub">BigHeart ROI tracker · archived persona</div></div><span class="badge badge-gray">Archived</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/job_opportunity_scanner" target="_blank"><div class="card-icon">🎯</div><div class="card-body"><div class="card-title">job_opportunity_scanner</div><div class="card-sub">Daily job fit scanner · archived persona</div></div><span class="badge badge-gray">Archived</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/agent_I_content" target="_blank"><div class="card-icon">📱</div><div class="card-body"><div class="card-title">agent_I_content</div><div class="card-sub">First-gen content + link-in-bio agent</div></div><span class="badge badge-purple">Agent</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/agent-II" target="_blank"><div class="card-icon">⚙️</div><div class="card-body"><div class="card-title">agent-II</div><div class="card-sub">Next-gen agent · in development</div></div><span class="badge badge-gray">Dev</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/Stefan_portfolio" target="_blank"><div class="card-icon">💼</div><div class="card-body"><div class="card-title">Stefan_portfolio (v1)</div><div class="card-sub">Superseded by Stefan-Portfolio</div></div><span class="badge badge-gray">Repo</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/-portfolio" target="_blank"><div class="card-icon">💼</div><div class="card-body"><div class="card-title">Portfolio (latest)</div><div class="card-sub">Most recent portfolio iteration</div></div><span class="badge badge-gray">Repo</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/Link-in-bio" target="_blank"><div class="card-icon">🔗</div><div class="card-body"><div class="card-title">Link-in-bio (v1)</div><div class="card-sub">Original link-in-bio project</div></div><span class="badge badge-gray">Repo</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/scrimba-workouts" target="_blank"><div class="card-icon">🏋️</div><div class="card-body"><div class="card-title">scrimba-workouts</div><div class="card-sub">Archived · frontend learning</div></div><span class="badge badge-gray">Archived</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/skills-introduction-to-git" target="_blank"><div class="card-icon">📘</div><div class="card-body"><div class="card-title">skills-introduction-to-git</div><div class="card-sub">GitHub Skills — Git fundamentals</div></div><span class="badge badge-blue">Learning</span></a>
-      <a class="card" href="https://github.com/morrisstephon51/studious-umbrella" target="_blank"><div class="card-icon">📦</div><div class="card-body"><div class="card-title">studious-umbrella</div><div class="card-sub">Archived · but still what agent-world-olive.vercel.app deploys from</div></div><span class="badge badge-orange">Live source</span></a>
-    </div>
-  </div>
-
-  <!-- Domains -->
-  <div class="section">
-    <div class="section-title">Domains</div>
-    <div class="grid grid-4">
-      <div class="card"><div class="card-icon">🌐</div><div class="card-body"><div class="card-title">theplugai.info</div><div class="card-sub">Active · email here</div></div><span class="badge badge-green">Active</span></div>
-      <div class="card"><div class="card-icon">🌐</div><div class="card-body"><div class="card-title">theplugai.world</div><div class="card-sub">Managed</div></div></div>
-      <div class="card"><div class="card-icon">🌐</div><div class="card-body"><div class="card-title">theplugai.net / .live / .store / .life / .online</div><div class="card-sub">DNS needs setup</div></div><span class="badge badge-orange">Setup needed</span></div>
-      <div class="card"><div class="card-icon">🌐</div><div class="card-body"><div class="card-title">theplugai.xyz</div><div class="card-sub">Reserved</div></div></div>
-      <div class="card"><div class="card-icon">🌐</div><div class="card-body"><div class="card-title">zenat.us</div><div class="card-sub">Managed</div></div></div>
-      <div class="card"><div class="card-icon">🌐</div><div class="card-body"><div class="card-title">usego.us</div><div class="card-sub">DNS needs setup</div></div><span class="badge badge-orange">Setup needed</span></div>
-      <div class="card"><div class="card-icon">🌐</div><div class="card-body"><div class="card-title">segaa.co.uk / abebo.co.uk</div><div class="card-sub">Managed</div></div></div>
-      <div class="card"><div class="card-icon">🌐</div><div class="card-body"><div class="card-title">fanuk.net / fanuk.uk</div><div class="card-sub">fanuk.uk needs setup</div></div></div>
-    </div>
-  </div>
-
-  <!-- Professional -->
-  <div class="section">
-    <div class="section-title">Professional</div>
-    <div class="grid grid-3">
-      <a class="card card-featured live" href="resume.html"><div class="card-icon">📄</div><div class="card-body"><div class="card-title">Live Resume</div><div class="card-sub">Web version · always current · print to PDF</div></div><span class="badge badge-green">Live</span></a>
-      <a class="card card-featured live" href="https://stefan-portfolio-eight.vercel.app" target="_blank"><div class="card-icon">🎨</div><div class="card-body"><div class="card-title">Portfolio Site</div><div class="card-sub">stefan-portfolio-eight.vercel.app · UX case studies</div></div><span class="badge badge-green">Live</span></a>
-      <a class="card card-featured" href="https://docs.google.com/document/d/1FRYju5fG9wRz8Y7YP8tZWxum6PYtWSO-C3FVl1gyfVg/edit" target="_blank"><div class="card-icon">🔬</div><div class="card-body"><div class="card-title">Atlas UX Case Study ✦ Revised</div><div class="card-sub">12-slide polished case study · grammar fixed · impact reframed</div></div><span class="badge badge-purple">Updated</span></a>
-      <a class="card" href="https://www.linkedin.com/in/stephonmorris51/" target="_blank"><div class="card-icon">💼</div><div class="card-body"><div class="card-title">LinkedIn</div><div class="card-sub">stephonmorris51 · connect professionally</div></div><span class="badge badge-blue">Social</span></a>
-      <a class="card" href="https://github.com/morrisstephon51" target="_blank"><div class="card-icon">🐙</div><div class="card-body"><div class="card-title">GitHub Profile</div><div class="card-sub">morrisstephon51 · all repos public</div></div><span class="badge badge-gray">Profile</span></a>
-      <a class="card" href="https://docs.google.com/document/d/1Frtgb9soIS899DPEDlYaNWFvu9Fj6_FwF0I7A4ynXp0/edit" target="_blank"><div class="card-icon">🎓</div><div class="card-body"><div class="card-title">Merit America — Alum Perks</div><div class="card-sub">Healthcare IT track · alumni resources & benefits</div></div><span class="badge badge-gray">Drive</span></a>
-      <a class="card" href="https://docs.google.com/document/d/1-36cpQUkiNOOhC1oAOTWRw4cFv0QCS-8Ntspu6EeJ4Q/edit" target="_blank"><div class="card-icon">🏗️</div><div class="card-body"><div class="card-title">PitchKitchen AEOS Builder</div><div class="card-sub">AI Employee Operating System v1.1</div></div><span class="badge badge-purple">AI Tool</span></a>
-    </div>
-  </div>
-
-  <!-- Daily Tools -->
-  <div class="section">
-    <div class="section-title">Daily Tools</div>
-    <div class="grid grid-4">
-      <a class="card" href="https://claude.ai/code" target="_blank"><div class="card-icon">🤖</div><div class="card-body"><div class="card-title">Claude Code</div><div class="card-sub">AI dev assistant</div></div></a>
-      <a class="card" href="https://console.anthropic.com/" target="_blank"><div class="card-icon">⚡</div><div class="card-body"><div class="card-title">Anthropic Console</div><div class="card-sub">API keys & usage</div></div></a>
-      <a class="card" href="https://supabase.com/dashboard/project/fqdrvhpdntflfkqxlvkq" target="_blank"><div class="card-icon">🗄️</div><div class="card-body"><div class="card-title">Supabase</div><div class="card-sub">DB dashboard</div></div></a>
-      <a class="card" href="https://vercel.com/cam6stef" target="_blank"><div class="card-icon">▲</div><div class="card-body"><div class="card-title">Vercel</div><div class="card-sub">6 live deployments</div></div></a>
-      <a class="card" href="https://github.com/morrisstephon51" target="_blank"><div class="card-icon">🐙</div><div class="card-body"><div class="card-title">GitHub</div><div class="card-sub">morrisstephon51</div></div></a>
-      <a class="card" href="https://drive.google.com/drive/my-drive" target="_blank"><div class="card-icon">📁</div><div class="card-body"><div class="card-title">Google Drive</div><div class="card-sub">All files & docs</div></div></a>
-      <a class="card" href="https://chatgpt.com/" target="_blank"><div class="card-icon">💬</div><div class="card-body"><div class="card-title">ChatGPT</div><div class="card-sub">OpenAI</div></div></a>
-      <a class="card" href="https://www.canva.com/" target="_blank"><div class="card-icon">🎨</div><div class="card-body"><div class="card-title">Canva</div><div class="card-sub">Graphics & design</div></div></a>
-      <a class="card" href="https://figma.com" target="_blank"><div class="card-icon">✏️</div><div class="card-body"><div class="card-title">Figma</div><div class="card-sub">UX design tool</div></div></a>
-      <a class="card" href="https://www.remotion.dev/" target="_blank"><div class="card-icon">🎞️</div><div class="card-body"><div class="card-title">Remotion Docs</div><div class="card-sub">Video rendering framework</div></div></a>
-      <a class="card" href="https://app.hubspot.com/" target="_blank"><div class="card-icon">📬</div><div class="card-body"><div class="card-title">HubSpot</div><div class="card-sub">CRM & email outreach</div></div></a>
-      <a class="card" href="https://calendar.google.com/" target="_blank"><div class="card-icon">📆</div><div class="card-body"><div class="card-title">Google Calendar</div><div class="card-sub">Scheduling & events</div></div></a>
-    </div>
-  </div>
-
-  <footer>
-    <p>Stephon Morris · Updated July 2026 · <a href="index.html" style="color:var(--purple);text-decoration:none;">Link-in-Bio</a></p>
-  </footer>
-
 </div>
-</div><!-- /main-content -->
+
+<main id="top">
+
+  <!-- ACT A · Recognition — flow + count. The surface is already in a state on load. -->
+  <section class="sc-section" data-sc-act="flow" data-sc-drift="#0B0B1A" data-sc-act-name="Recognition">
+    <div class="sc-wrap boot">
+      <div class="sc-stack" data-sc-in data-sc-stagger="60">
+        <p class="cc-eyebrow">Live, as of this scroll</p>
+        <h1 class="sc-display sc-display--xl">The fleet is already running.</h1>
+        <p class="sc-body">Nine agents, two live products, one founder. Everything below is either
+          fetched live in front of you or dated the day it was last checked — nothing here is a
+          claim you have to take on faith.</p>
+      </div>
+      <div class="boot__counts" data-sc-in data-sc-stagger="60">
+        <div class="boot__count">
+          <div class="num"><span class="sc-nums" data-sc-count="0 9" data-sc-count-at="0.05 0.4">0</span></div>
+          <div class="cap">Real agents in the fleet</div>
+        </div>
+        <div class="boot__count">
+          <div class="num"><span class="sc-nums" id="runsCount" data-sc-count="0 0" data-sc-count-at="0.05 0.5">0</span></div>
+          <div class="cap">Completed runs, summed live</div>
+        </div>
+        <div class="boot__count">
+          <div class="num"><span class="sc-nums" data-sc-count="0 233" data-sc-count-at="0.05 0.6">0</span></div>
+          <div class="cap">Subagent definitions on file</div>
+        </div>
+        <div class="boot__count">
+          <div class="num"><span class="sc-nums" id="siteCount" data-sc-count="0 0" data-sc-count-at="0.05 0.7">0</span></div>
+          <div class="cap">Live properties tracked</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACT B · Substance — pin. Fleet roster crossfades through real per-agent data. -->
+  <section id="fleetAct" data-sc-act="pin" data-sc-span="4.4" data-sc-drift="#14142A" data-sc-act-name="Substance">
+    <div data-sc-stage class="sc-wrap fleet-stage">
+      <nav class="fleet-roster" id="fleetRoster" aria-label="Fleet roster"></nav>
+      <div class="fleet-detail" id="fleetDetail" data-sc-verify-state="0"></div>
+    </div>
+  </section>
+
+  <!-- ACT C · Turn — flow, short. A held beat before the subject changes. -->
+  <section class="sc-section" data-sc-act="flow" data-sc-drift="#0F0F22" data-sc-act-name="Turn">
+    <div class="sc-wrap" style="max-width: 46rem;">
+      <div class="sc-stack" data-sc-in data-sc-stagger="60">
+        <p class="cc-eyebrow">What the fleet is for</p>
+        <p class="sc-body" style="font-size: var(--sc-t-lg); color: var(--sc-ink);">
+          Eight supervisors and a router exist to build two things, not to exist for their own sake:
+          a health-first breeding platform, and an AI-literacy program for people the tech world forgot.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACT D · Range — pointer/tilt. The two flagship products, both actually live. -->
+  <section class="sc-section" data-sc-act="flow" data-sc-drift="#0F0F22" data-sc-act-name="Range">
+    <div class="sc-wrap">
+      <p class="cc-eyebrow" data-sc-in>Both running in production</p>
+      <div class="products" style="margin-top: var(--sc-6);">
+        <a class="product-card" data-sc-in data-sc-tilt="6" href="https://theplugai.xyz" target="_blank" rel="noopener">
+          <span class="product-card__domain">theplugai.xyz</span>
+          <h3>Forming Paws</h3>
+          <p>Health-first dog breeding platform. Accounts, health-doc verification, browse, matching, owner chat — the full app, not a marketing page.</p>
+          <span class="product-card__status"><span class="status-dot status-dot--live"></span>Live · Vercel, main</span>
+        </a>
+        <a class="product-card" data-sc-in data-sc-tilt="6" href="https://theplugai.info" target="_blank" rel="noopener">
+          <span class="product-card__domain">theplugai.info</span>
+          <h3>The Plug AI</h3>
+          <p>AI literacy for faith communities, community health workers, and first-gen students in south suburban Cook County.</p>
+          <span class="product-card__status"><span class="status-dot status-dot--live"></span>Live · Vercel</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACT E · Convergence — reveal. THE PEAK. Every property checks itself live. -->
+  <section class="sc-section" data-sc-drift="#0B0B1A" data-sc-act-name="Convergence" style="padding-bottom: var(--sc-9);">
+    <div class="sc-wrap">
+      <div class="peak-head" data-sc-in data-sc-stagger="60">
+        <p class="cc-eyebrow">Everything, checked in front of you</p>
+        <h2 class="sc-display sc-display--lg">This is the whole system, live.</h2>
+        <p class="sc-body">Each card below fires a real reachability check against its actual
+          origin the moment it scrolls into view. A resolved response means the origin answered
+          you, right now, in your browser — not a cached claim from an audit.</p>
+      </div>
+      <div class="launch-grid" id="launchGrid"></div>
+      <p class="launch-note">One check here is deliberately impossible: <code>theplugai.online</code>
+        can't be reached from this page because it's still served over plain HTTP, and a page loaded
+        over HTTPS is not allowed to make that request. That failure <em>is</em> the open bug — see
+        the card itself.</p>
+    </div>
+  </section>
+
+  <!-- ACT F · Commitment — flow + real input + magnet CTA. Resolves, does not fade. -->
+  <section class="sc-section close-act" data-sc-drift="#0B0B1A" data-sc-act-name="Commitment">
+    <div class="sc-wrap">
+      <div class="sc-stack" data-sc-in data-sc-stagger="60" style="max-width: 46rem;">
+        <p class="close-status" id="closeStatus">Verifying the system<span aria-hidden="true">…</span></p>
+        <label class="visually-hidden" for="jumpInput">Jump to a site, repo, or agent</label>
+        <div class="filter-field">
+          <span aria-hidden="true" style="color: var(--sc-ink-soft); font-family: var(--sc-font-mono);">→</span>
+          <input id="jumpInput" type="text" placeholder="Type to jump to a site, repo, or agent…" autocomplete="off">
+        </div>
+        <div class="filter-results" id="filterResults"></div>
+        <a class="cc-cta" data-sc-magnet="0.26" href="https://theplugai.xyz" target="_blank" rel="noopener">Enter Forming Paws →</a>
+        <p class="provenance">Sources: <a href="https://github.com/morrisstephon51/obsidian-kai/blob/main/09-SYSTEM/Command%20Center.md" target="_blank" rel="noopener">Command Center.md</a> and
+          <a href="https://github.com/morrisstephon51/obsidian-kai/blob/main/_ops/important-links.md" target="_blank" rel="noopener">important-links.md</a>,
+          both re-verified 2026-08-30. Agent fleet data via <a href="https://agent-world-olive.vercel.app/api/agents" target="_blank" rel="noopener">MUNDI's public API</a>
+          when reachable, otherwise a snapshot captured the same day.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
 
 <script>
-  // PIN lock — SHA-256 hash of the PIN
-  // To set a new PIN, run in browser console:
-  // crypto.subtle.digest('SHA-256',new TextEncoder().encode('yourPIN')).then(b=>console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
-  // Then replace CORRECT_HASH below with the output.
-  const CORRECT_HASH  = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
-  const _DEFAULT_HASH = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+// PIN lock — carried over verbatim from the previous dashboard.html.
+// To set a new PIN, run in browser console:
+// crypto.subtle.digest('SHA-256',new TextEncoder().encode('yourPIN')).then(b=>console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+// Then replace CORRECT_HASH below with the output.
+(function () {
+  "use strict";
+  var CORRECT_HASH  = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+  var _DEFAULT_HASH = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
   if (CORRECT_HASH === _DEFAULT_HASH) {
-    console.warn('⚠️ SECURITY: Dashboard is using the default PIN. Update CORRECT_HASH in dashboard.html before sharing this URL.');
+    console.warn('⚠️ SECURITY: Dashboard is using the default PIN. Update CORRECT_HASH before sharing this URL.');
   }
 
-  async function hashPin(pin) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
-    return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2,'0')).join('');
+  function hashPin(pin) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin)).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (x) { return x.toString(16).padStart(2, '0'); }).join('');
+    });
   }
 
-  const pinInput   = document.getElementById('pin-input');
-  const pinError   = document.getElementById('pin-error');
-  const lockScreen = document.getElementById('lock-screen');
-  const main       = document.getElementById('main-content');
+  var pinInput = document.getElementById('pin-input');
+  var pinError = document.getElementById('pin-error');
+  var lockScreen = document.getElementById('lock-screen');
 
-  if (sessionStorage.getItem('unlocked') === '1') {
+  function unlock() {
     lockScreen.style.display = 'none';
-    main.style.display = 'block';
+    document.body.classList.remove('is-locked');
   }
 
-  pinInput.addEventListener('input', async () => {
-    if (pinInput.value.length === 6) {
-      const hash = await hashPin(pinInput.value);
+  if (sessionStorage.getItem('unlocked') === '1') unlock();
+
+  pinInput.addEventListener('input', function () {
+    if (pinInput.value.length !== 6) return;
+    hashPin(pinInput.value).then(function (hash) {
       if (hash === CORRECT_HASH) {
-        lockScreen.style.display = 'none';
-        main.style.display = 'block';
         sessionStorage.setItem('unlocked', '1');
+        unlock();
       } else {
         pinError.textContent = 'Incorrect PIN. Try again.';
         pinInput.value = '';
-        setTimeout(() => { pinError.textContent = ''; }, 2000);
+        setTimeout(function () { pinError.textContent = ''; }, 2000);
       }
-    }
+    });
   });
+})();
+</script>
 
-  // Search
-  document.getElementById('search').addEventListener('input', function() {
-    const q = this.value.toLowerCase().trim();
-    document.querySelectorAll('.card').forEach(c => {
-      c.style.display = (!q || c.textContent.toLowerCase().includes(q)) ? '' : 'none';
+<script src="scrollcraft.js"></script>
+<script>ScrollCraft.mount(document.body);</script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // Real, verified static data — the honesty-rule fallback and the
+  // Live Sites / Fleet source of truth. Dated 2026-08-30 against
+  // Command Center.md and important-links.md, both re-verified the same day.
+  // ---------------------------------------------------------------------
+  var FLEET_FALLBACK = {
+    updatedAt: "2026-08-30T07:42:19.326Z",
+    source: "cached — captured 2026-08-30 via direct curl, live endpoint unreachable (CORS pending mundi-agent-dashboard#8)",
+    live: false,
+    agents: [
+      { agent: "clawd", display_name: "clawd / Kai", role: "Always-On Gateway", status: "idle", runs_completed: 256, last_run: "2026-08-30T05:06:13Z" },
+      { agent: "orchestrator", display_name: "Orchestrator", role: "Pipeline Orchestration Supervisor", status: "idle", runs_completed: 2, last_run: "2026-08-06T17:04:34.611Z" },
+      { agent: "architect", display_name: "Architect", role: "System Design Supervisor", status: "idle", runs_completed: 15, last_run: "2026-08-26T00:36:18.776Z" },
+      { agent: "codex", display_name: "Codex", role: "Code Agent · GitHub Sync", status: "idle", runs_completed: 242, last_run: "2026-08-30T05:09:00Z" },
+      { agent: "antigravity", display_name: "Antigravity", role: "General Agent · Explorer", status: "idle", runs_completed: 231, last_run: "2026-08-30T05:02:00Z" },
+      { agent: "aexis", display_name: "Aexis", role: "Execution Accountability Supervisor", status: "idle", runs_completed: 5, last_run: "2026-08-11T14:50:24.970Z" },
+      { agent: "aeos", display_name: "Aeos", role: "Strategic Signal Supervisor", status: "idle", runs_completed: 16, last_run: "2026-08-11T15:51:51.553Z" },
+      { agent: "content-pipeline", display_name: "Content Pipeline", role: "Content Automation · The Plug AI", status: "idle", runs_completed: 246, last_run: "2026-08-30T00:00:00Z" },
+      { agent: "perplexity-agent", display_name: "Perplexity", role: "Real-Time Research · Citations", status: "running", runs_completed: 225, last_run: "2026-08-12T23:18:13.257Z" }
+    ]
+  };
+
+  var SITES = [
+    { name: "Forming Paws", domain: "theplugai.xyz", url: "https://theplugai.xyz", group: "site" },
+    { name: "The Plug AI", domain: "theplugai.info", url: "https://theplugai.info", group: "site" },
+    { name: "MUNDI Dashboard", domain: "theplugai.live", url: "https://theplugai.live", group: "site" },
+    { name: "Stefan's Portfolio", domain: "theplugai.life", url: "https://theplugai.life", group: "site" },
+    { name: "Link-in-Bio", domain: "theplugai.net", url: "https://theplugai.net", group: "site" },
+    { name: "Command Center", domain: "theplugai.online", url: "http://theplugai.online", group: "site", knownBroken: "HTTPS cert never issued — mixed content, can't be checked from this page" },
+    { name: "Community Intake", domain: "community-intake-routing.vercel.app", url: "https://community-intake-routing.vercel.app", group: "site" },
+    { name: "AI Video Reel Generator", domain: "ai-video-reel-generator.vercel.app", url: "https://ai-video-reel-generator.vercel.app", group: "site" },
+    { name: "Content Machine", domain: "content-machine-wine.vercel.app", url: "https://content-machine-wine.vercel.app", group: "site", archived: true },
+    { name: "Psychic Octo Engine", domain: "psychic-octo-engine-psi.vercel.app", url: "https://psychic-octo-engine-psi.vercel.app", group: "site", archived: true }
+  ];
+
+  var REPOS = [
+    { name: "forming-paws", url: "https://github.com/morrisstephon51/forming-paws", group: "repo" },
+    { name: "psychic-bassoon", url: "https://github.com/morrisstephon51/psychic-bassoon", group: "repo" },
+    { name: "mundi-agent-dashboard", url: "https://github.com/morrisstephon51/mundi-agent-dashboard", group: "repo" },
+    { name: "obsidian-kai (vault)", url: "https://github.com/morrisstephon51/obsidian-kai", group: "repo" },
+    { name: "Link-inbio", url: "https://github.com/morrisstephon51/Link-inbio", group: "repo" },
+    { name: "Stefan-Portfolio", url: "https://github.com/morrisstephon51/Stefan-Portfolio", group: "repo" }
+  ];
+
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+
+  // ---------------- Fleet: live fetch with labelled fallback ----------------
+  var fleetData = null;
+
+  function timeAgo(iso) {
+    if (!iso) return "no run yet";
+    var ms = Date.now() - new Date(iso).getTime();
+    var h = Math.round(ms / 36e5);
+    if (h < 1) return "under an hour ago";
+    if (h < 48) return h + "h ago";
+    return Math.round(h / 24) + "d ago";
+  }
+
+  var fleetShowDetail = null;
+
+  function renderFleet(data) {
+    var roster = $("#fleetRoster");
+    var detail = $("#fleetDetail");
+    roster.innerHTML = "";
+    var totalRuns = 0;
+    data.agents.forEach(function (a, i) {
+      totalRuns += (a.runs_completed || 0);
+      var row = document.createElement("button");
+      row.type = "button";
+      row.className = "fleet-row" + (i === 0 ? " is-current" : "");
+      row.setAttribute("data-i", i);
+      row.innerHTML =
+        '<span class="fleet-row__name">' + (a.display_name || a.agent) + '</span>' +
+        '<span class="fleet-row__meta">' + (a.status || "—") + ' · ' + (a.runs_completed || 0) + ' runs</span>';
+      row.addEventListener("mouseenter", function () { showDetail(i); });
+      row.addEventListener("focus", function () { showDetail(i); });
+      roster.appendChild(row);
     });
-    document.querySelectorAll('.section').forEach(s => {
-      const visible = [...s.querySelectorAll('.card')].some(c => c.style.display !== 'none');
-      s.style.display = (q && !visible) ? 'none' : '';
+
+    function showDetail(i) {
+      $$(".fleet-row", roster).forEach(function (r, j) { r.classList.toggle("is-current", i === j); });
+      var a = data.agents[i];
+      detail.innerHTML =
+        '<p class="fleet-detail__role">' + (a.role || "") + '</p>' +
+        '<div class="fleet-detail__name"><span class="status-dot ' + (a.status === "running" ? "status-dot--live" : "") + '"></span>' + (a.display_name || a.agent) + '</div>' +
+        '<div class="fleet-detail__stats">' +
+          '<div><div class="num">' + (a.runs_completed || 0) + '</div><div class="cap">Runs completed</div></div>' +
+          '<div><div class="num" style="font-size: var(--sc-t-base);">' + timeAgo(a.last_run) + '</div><div class="cap">Last run</div></div>' +
+        '</div>' +
+        (data.live === false ? '<p class="fleet-detail__source">' + FLEET_FALLBACK.updatedAt.slice(0,10) + ' snapshot — live sync unreachable right now</p>' : '');
+      // The fixed detail panel is the whole visible change in this pinned act;
+      // the engine has no idea it exists, so it reports its own state per
+      // references/verify.md's "bespoke fixed stages" convention.
+      detail.setAttribute("data-sc-verify-state", String(i));
+    }
+    showDetail(0);
+    fleetShowDetail = showDetail;
+
+    var runsEl = $("#runsCount");
+    if (runsEl) { runsEl.setAttribute("data-sc-count", "0 " + totalRuns); runsEl.textContent = "0"; }
+    return totalRuns;
+  }
+
+  // The pin act must visibly change with scroll progress, not only on hover —
+  // hover is a convenience for a mouse user, --sc-p is what makes this a
+  // *pinned* act instead of a static panel with dead scroll behind it.
+  (function driveFleetFromScroll() {
+    var actEl = $("#fleetAct");
+    var lastIdx = -1;
+    function tick() {
+      if (fleetShowDetail && fleetData) {
+        var p = parseFloat(getComputedStyle(actEl).getPropertyValue("--sc-p")) || 0;
+        var n = fleetData.agents.length;
+        var idx = Math.max(0, Math.min(n - 1, Math.floor(p * n)));
+        if (idx !== lastIdx) { lastIdx = idx; fleetShowDetail(idx); }
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+
+  function loadFleet() {
+    fetch("https://agent-world-olive.vercel.app/api/agents", { mode: "cors" })
+      .then(function (r) { if (!r.ok) throw new Error("bad status"); return r.json(); })
+      .then(function (json) {
+        var agents = (json.agents || []).filter(function (a) {
+          return a.agent && ["clawd","orchestrator","architect","codex","antigravity","aexis","aeos","content-pipeline","perplexity-agent"].indexOf(a.agent) !== -1;
+        });
+        fleetData = { agents: agents, live: true, updatedAt: json.updatedAt };
+        renderFleet(fleetData);
+      })
+      .catch(function () {
+        fleetData = FLEET_FALLBACK;
+        // The source note lives inside .fleet-detail's own render (see
+        // showDetail's data.live branch) rather than as a separately
+        // positioned element — an earlier version injected a second grid
+        // child into .fleet-stage, which silently broke its 2-column layout,
+        // and a later absolutely-positioned version overlapped the roster's
+        // first row instead. Folding it into existing, already-visible copy
+        // has no positioning surface left to conflict with.
+        renderFleet(FLEET_FALLBACK);
+      });
+  }
+  loadFleet();
+
+  // ---------------- Launch grid: real reachability checks ----------------
+  // Checks fire immediately, in parallel, independent of scroll — a probe
+  // takes 0.2-2s in practice and nobody should have to sit scrolled onto a
+  // card waiting for its own network round trip. Scroll position only drives
+  // the wipe that REVEALS a result; by the time a card is in view its check
+  // has usually already resolved, and if it hasn't the card just says so.
+  var checkedCount = 0, liveCount = 0;
+  var siteResults = {}; // domain -> { result, resolved }
+
+  function probe(url) {
+    return new Promise(function (resolve) {
+      if (location.protocol === "https:" && url.indexOf("http://") === 0) {
+        resolve("blocked"); return;
+      }
+      var ctrl = new AbortController();
+      var t = setTimeout(function () { ctrl.abort(); }, 3000);
+      fetch(url, { mode: "no-cors", signal: ctrl.signal })
+        .then(function () { clearTimeout(t); resolve("live"); })
+        .catch(function () { clearTimeout(t); resolve("down"); });
     });
-  });
+  }
+
+  function paintCard(card, site) {
+    var dot = $("[data-state-dot]", card);
+    var label = $("[data-state-label]", card);
+    var entry = siteResults[site.domain];
+    if (!entry || !entry.resolved) { label.textContent = "checking…"; return; }
+    var result = entry.result;
+    dot.className = "status-dot";
+    if (site.knownBroken) {
+      dot.classList.add("status-dot--warn");
+      label.textContent = site.knownBroken;
+    } else if (result === "live") {
+      dot.classList.add("status-dot--live");
+      label.textContent = site.archived ? "reachable · repo archived" : "reachable";
+    } else if (result === "blocked") {
+      dot.classList.add("status-dot--warn");
+      label.textContent = "can't check — HTTP from an HTTPS page";
+    } else {
+      dot.classList.add("status-dot--down");
+      label.textContent = "no response";
+    }
+  }
+
+  function buildLaunchGrid() {
+    var grid = $("#launchGrid");
+    grid.innerHTML = "";
+    var total = SITES.length;
+    var cards = {};
+
+    SITES.forEach(function (site) {
+      var card = document.createElement("a");
+      card.className = "launch-card";
+      card.href = site.url; card.target = "_blank"; card.rel = "noopener";
+      card.innerHTML =
+        '<div class="launch-card__top"><span class="launch-card__name">' + site.name + '</span></div>' +
+        '<span class="launch-card__domain">' + site.domain + '</span>' +
+        '<span class="launch-card__state"><span class="status-dot" data-state-dot></span><span data-state-label>checking…</span></span>';
+      grid.appendChild(card);
+      cards[site.domain] = card;
+
+      // Fire the real check now, regardless of scroll position.
+      siteResults[site.domain] = { result: null, resolved: false };
+      probe(site.url).then(function (result) {
+        siteResults[site.domain] = { result: result, resolved: true };
+        checkedCount++;
+        if (result === "live" && !site.knownBroken) liveCount++;
+        if (card.classList.contains("is-checked")) paintCard(card, site); // already revealed: update live
+        updateTally(total);
+      });
+
+      // Scroll only drives the reveal of whatever state exists right now.
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          io.disconnect();
+          paintCard(card, site);
+          card.classList.add("is-checked");
+        });
+      }, { threshold: 0.3 });
+      io.observe(card);
+    });
+  }
+  buildLaunchGrid();
+
+  function updateTally(total) {
+    var tally = $("#tallyLabel");
+    if (tally) tally.textContent = liveCount + " / " + checkedCount + " checked live";
+    var status = $("#closeStatus");
+    if (!status) return;
+    if (checkedCount >= total) {
+      status.innerHTML = '<span class="num">' + liveCount + '</span> of <span class="num">' + total + '</span> properties verified live, just now.';
+      status.setAttribute("data-sc-verify-state", "resolved:" + liveCount + "/" + total);
+      status.setAttribute("data-sc-verify-hold", "true");
+    } else {
+      status.innerHTML = 'Verifying the system<span aria-hidden="true">…</span> <span class="num">' + liveCount + '</span> of <span class="num">' + checkedCount + '</span> checked so far.';
+      status.setAttribute("data-sc-verify-state", "checking:" + liveCount + "/" + checkedCount);
+    }
+  }
+
+  var siteCountEl = $("#siteCount");
+  if (siteCountEl) siteCountEl.setAttribute("data-sc-count", "0 " + SITES.length);
+
+  // ---------------- Real input: jump filter ----------------
+  var ALL_ENTRIES = SITES.map(function (s) { return { name: s.name, sub: s.domain, url: s.url }; })
+    .concat(REPOS.map(function (r) { return { name: r.name, sub: "GitHub", url: r.url }; }))
+    .concat(FLEET_FALLBACK.agents.map(function (a) { return { name: a.display_name, sub: a.role, url: null }; }));
+
+  var input = $("#jumpInput");
+  var results = $("#filterResults");
+  function renderResults(q) {
+    results.innerHTML = "";
+    if (!q) return;
+    var matches = ALL_ENTRIES.filter(function (e) {
+      return e.name.toLowerCase().indexOf(q) !== -1 || (e.sub || "").toLowerCase().indexOf(q) !== -1;
+    }).slice(0, 8);
+    if (!matches.length) {
+      var empty = document.createElement("div");
+      empty.className = "filter-empty";
+      empty.textContent = "Nothing matches “" + q + "”";
+      results.appendChild(empty);
+      return;
+    }
+    matches.forEach(function (m) {
+      var row = document.createElement("div");
+      row.className = "filter-row";
+      row.innerHTML = m.url
+        ? '<a href="' + m.url + '" target="_blank" rel="noopener">' + m.name + '</a><span>' + m.sub + '</span>'
+        : '<span>' + m.name + '</span><span>' + m.sub + '</span>';
+      results.appendChild(row);
+    });
+  }
+  input.addEventListener("input", function () { renderResults(input.value.trim().toLowerCase()); });
+
+  // ---------------- Status bar: current act label ----------------
+  var acts = $$("[data-sc-act-name]");
+  var actLabel = $("#actLabel");
+  var bootDot = $("#bootDot");
+  var actIO = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) actLabel.textContent = e.target.getAttribute("data-sc-act-name");
+    });
+  }, { threshold: 0.5 });
+  acts.forEach(function (a) { actIO.observe(a); });
+  setTimeout(function () { bootDot.classList.add("status-dot--live"); }, 600);
+})();
 </script>
 
 </body>
