@@ -13,6 +13,47 @@ const PLATFORM_SPECS: Record<Platform, string> = {
 const BRAND_VOICE_DEFAULT =
   'Community-first, Gen Z tone, AI education focus for underserved Chicago south suburban communities. Real, direct, no corporate speak. Make people feel seen and empowered.';
 
+// The valid platform values the rest of the pipeline keys on (remotion's
+// DURATION_BY_PLATFORM map, the persisted Supabase row). The model's returned
+// `platform` MUST be one of these: a drifted value like "youtube shorts" or
+// "Instagram" would index DURATION_BY_PLATFORM to `undefined`, and JSON.stringify
+// then silently drops `durationInFrames` when supabase-js serializes video_outputs —
+// persisting a payload with no duration. (Issue #12 guarded the CLI *input*
+// platforms; this guards the model *output*, the sibling the input fix left open.)
+const VALID_PLATFORMS: ReadonlySet<Platform> = new Set<Platform>([
+  'instagram',
+  'tiktok',
+  'facebook',
+  'youtube_shorts',
+]);
+
+// Validates the model's JSON before it flows downstream. Throws a descriptive error
+// (matching the JSON-parse guard below) so a malformed or drifted response fails
+// loudly at generation instead of persisting a corrupt content_items row.
+function assertValidPosts(posts: unknown): asserts posts is PostDraft[] {
+  if (!Array.isArray(posts)) {
+    throw new Error(`Claude returned a non-array of posts (got ${typeof posts})`);
+  }
+  posts.forEach((post, i) => {
+    if (typeof post !== 'object' || post === null) {
+      throw new Error(`Post[${i}] is not an object`);
+    }
+    const { platform, hook, caption, hashtags } = post as Record<string, unknown>;
+    if (typeof platform !== 'string' || !VALID_PLATFORMS.has(platform as Platform)) {
+      throw new Error(
+        `Post[${i}] has invalid platform ${JSON.stringify(platform)} — ` +
+          `expected one of: ${[...VALID_PLATFORMS].join(', ')}`
+      );
+    }
+    if (typeof hook !== 'string' || typeof caption !== 'string') {
+      throw new Error(`Post[${i}] (${platform}) is missing a string hook or caption`);
+    }
+    if (!Array.isArray(hashtags) || hashtags.some((t) => typeof t !== 'string')) {
+      throw new Error(`Post[${i}] (${platform}) hashtags must be an array of strings`);
+    }
+  });
+}
+
 export async function generatePosts(
   topic: string,
   platforms: Platform[],
@@ -56,7 +97,7 @@ Return ONLY a valid JSON array with this exact shape, no markdown:
 
   const text = response.content[0].type === 'text' ? response.content[0].text : '';
 
-  let posts: PostDraft[];
+  let posts: unknown;
   try {
     posts = JSON.parse(text);
   } catch {
@@ -65,5 +106,6 @@ Return ONLY a valid JSON array with this exact shape, no markdown:
     posts = JSON.parse(jsonMatch[0]);
   }
 
+  assertValidPosts(posts);
   return posts;
 }
