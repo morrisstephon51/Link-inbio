@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { generatePosts } from './generator.js';
+import { assertCoversPlatforms } from './coverage.js';
 import { buildRemotionPayloads } from './remotion.js';
 import { insertContentItem } from './supabase.js';
 import type { AgentInput, ContentItemRow, Platform, PostDraft } from './types.js';
@@ -39,6 +40,7 @@ async function run(input: AgentInput) {
   // 1. Generate posts via Claude
   console.log('\n⚙️  Generating posts via Claude...');
   const posts = await generatePosts(input.topic, platforms, brandVoice);
+  assertCoversPlatforms(posts, platforms);
 
   // 2. Build Remotion payloads
   const remotionPayloads = buildRemotionPayloads(posts, input.topic);
