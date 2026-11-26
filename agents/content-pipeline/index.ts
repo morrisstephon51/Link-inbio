@@ -94,10 +94,21 @@ if (invalidPlatforms.length > 0) {
   process.exit(1);
 }
 
+// Same guard for the input type: it is persisted as content_items.input_type,
+// so a typo ("Event", "events") must fail here, before the paid Claude call,
+// instead of being cast through and stored as an off-schema value.
+const VALID_INPUT_TYPES = new Set<string>(['topic', 'event']);
+const requestedInputType = args[2] ?? 'topic';
+if (!VALID_INPUT_TYPES.has(requestedInputType)) {
+  console.error(`\n❌ Invalid input type: ${JSON.stringify(requestedInputType)}`);
+  console.error(`   Valid input types: ${[...VALID_INPUT_TYPES].join(', ')}`);
+  process.exit(1);
+}
+
 const input: AgentInput = {
   topic: args[0],
   platforms: requestedPlatforms.length > 0 ? (requestedPlatforms as Platform[]) : undefined,
-  inputType: (args[2] as 'topic' | 'event') ?? 'topic',
+  inputType: requestedInputType as 'topic' | 'event',
 };
 
 run(input).catch((err) => {
